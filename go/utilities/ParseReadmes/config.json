@@ -1,0 +1,10 @@
+{
+  "Abstract": "Text for abstract",
+  "ChapAbbv": "CHAPTER ABBREVIATION",
+  "ChapID": "CHAPTER ID TEXT",
+  "ChapTitle": "Chapter title",
+  "Entity": "ENTITY",
+  "Format": "xml",
+  "InfoText": "Text for introductory paragraph",
+  "sdk": "AWS SDK for Go"
+}

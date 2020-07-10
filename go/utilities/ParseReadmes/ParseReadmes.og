@@ -1,0 +1,658 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+)
+
+func verbosePrint(verbose *bool, s string) {
+	if *verbose {
+		fmt.Println(s)
+	}
+}
+
+// Character used for MD headings, e.g., #Heading1#, ##Heading 2##, etc.
+var mdH = "#"
+
+// Character used for RST H1 headings
+var rstH1 = "="
+
+// Character used for RST H2 headings
+var rstH2 = "-"
+
+// Return the string of mdH, rstH1, or rstH2 chars the length of the heading
+func getRstUnderscores(level int, heading *string) string {
+	ch := ""
+
+	switch level {
+	case 0:
+		ch = mdH
+	case 1:
+		ch = rstH1
+		break
+	case 2:
+		ch = rstH2
+		break
+	default:
+		return ""
+	}
+
+	i := 0
+
+	for i < len(*heading) {
+		ch += ch
+		i++
+	}
+
+	return ch
+}
+
+// If it's a heading, e.g., <h2 id="abc">HEADING</h2>,
+// return 2, "abc", "HEADING"; otherwise, return 0, "", ""
+func getHeading(verbose *bool, text string) (int, string, string) {
+	// Trap strings too short to be headings
+	// Minimal heading: <hN>a</hN> is 10 chars
+	l := len(text)
+
+	if l < 10 {
+		verbosePrint(verbose, "The line is too short to be a heading")
+		return 0, "", ""
+	}
+
+	// Get first 2 chars
+	first2 := text[0:2]
+
+	if first2 != "<h" {
+		verbosePrint(verbose, "The first two characters, "+first2+" are not <h")
+		return 0, "", ""
+	}
+
+	level := string(text[2])
+
+	i, err := strconv.Atoi(level)
+	if err != nil {
+		// It's not an int
+		return 0, "", ""
+	}
+
+	verbosePrint(verbose, "Got level "+level)
+
+	// For:
+	//    <h2 id="abc">HEADING</h2>
+	// return:
+	//     2, "abc", "HEADING"
+	parts := strings.Split(text, "\"") // gives us "<h2 id=", "abc", ">HEADING</h2>"
+	// make sure we get three chunks
+	if len(parts) < 3 {
+		verbosePrint(verbose, "Could not get all of the parts of the string:")
+		verbosePrint(verbose, text)
+		return 0, "", ""
+	}
+
+	id := parts[1]
+	title := parts[2]
+
+	verbosePrint(verbose, "Got id: "+id)
+
+	// title looks like:
+	//    >HEADING</h2>
+	// so lop off the first char and the last 5 chars
+	// Get first 2 chars
+	title = title[1 : len(title)-5]
+	verbosePrint(verbose, "Got title: "+title)
+
+	return i, id, title
+}
+
+func writePostXML(verbose *bool, file os.File, level int) {
+	msg := fmt.Sprintf("%s %d %s", "Closing", level, "sections")
+	verbosePrint(verbose, msg)
+
+	for level > 0 {
+		file.WriteString("</section>\n")
+		level--
+	}
+}
+
+/*
+.. _examples-s3:
+
+##################################
+Advanced Code Examples for the SDK
+##################################
+
+.. meta::
+   :description: About the advanced examples that use the SDK
+   :keywords: SDK code examples
+
+Use the following SDK xamples .
+The examples assume you have already set up and configured the SDK
+(that is, you've imported all required packages and set your credentials and region).
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   rst-filename-without-extension
+*/
+
+func writePreRSTAb(file os.File, sdk, title *string) {
+	us := getRstUnderscores(0, title)
+
+	file.WriteString(".. Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.\n")
+	file.WriteString("   SPDX-License-Identifier: CC-BY-SA-4.0\n")
+	file.WriteString("\n")
+	file.WriteString(".. _advanced-examples\n")
+	file.WriteString(us + "\n")
+	file.WriteString(*title + "\n")
+	file.WriteString(us + "\n")
+	file.WriteString("\n")
+	file.WriteString(". meta::\n")
+	file.WriteString("   :description: About the advanced examples that use the " + *sdk + "\n")
+	file.WriteString("   :keywords: " + *sdk + " code examples\n")
+	file.WriteString("")
+	file.WriteString("This SDK provides the following advanced code examples.\n")
+	file.WriteString("\n")
+	file.WriteString(".. toctree::\n")
+	file.WriteString("    :titlesonly:\n")
+	file.WriteString("   :maxdepth: 1\n")
+	file.WriteString("\n")
+}
+
+func writePreXMLAb(file os.File, ChapID, ChapTitle, ChapAbbv, Abstract, InfoText string) {
+	file.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	file.WriteString("<!DOCTYPE chapter PUBLIC \"-//OASIS//DTD DocBook XML V4.5//EN\" \"file://zonbook/docbookx.dtd\"\n")
+	file.WriteString(" [\n")
+	file.WriteString("  <!ENTITY % xinclude SYSTEM \"file://AWSShared/common/xinclude.mod\">\n")
+	file.WriteString("  %xinclude;\n")
+	file.WriteString("  <!ENTITY % phrases-shared SYSTEM \"file://AWSShared/common/phrases-shared.ent\">\n")
+	file.WriteString("  %phrases-shared;\n")
+	file.WriteString("  <!ENTITY % cdk_entities SYSTEM \"../shared/cdk.ent\">\n")
+	file.WriteString("  %cdk_entities;\n")
+	file.WriteString(" ]>\n")
+	file.WriteString("<chapter role=\"topic\" id=\"" + ChapID + "\">\n")
+	file.WriteString("<info>\n")
+	file.WriteString("<title id=\"about-libraries.title\">" + ChapTitle + "\"</title>\n")
+	file.WriteString("<titleabbrev>" + ChapAbbv + "</titleabbrev>\n")
+	file.WriteString("<abstract>\n")
+	file.WriteString("<para>" + Abstract + "</para>\n")
+	file.WriteString("</abstract>\n")
+	file.WriteString("</info>\n")
+	file.WriteString("\n")
+	file.WriteString("<para>" + InfoText + "</para>\n")
+	file.WriteString("\n")
+}
+
+/*
+  Entity is the name of your entity file: ../shared/ENTITY.ent file
+*/
+func writePreXML(file *os.File, Entity *string) {
+	file.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	file.WriteString("<!DOCTYPE section PUBLIC \"-//OASIS//DTD DocBook XML V4.5//EN\" \"file://zonbook/docbookx.dtd\"\n")
+	file.WriteString(" [\n")
+	file.WriteString("  <!ENTITY % xinclude SYSTEM \"file://AWSShared/common/xinclude.mod\">\n")
+	file.WriteString("  %xinclude;\n")
+	file.WriteString("  <!ENTITY % phrases-shared SYSTEM \"file://AWSShared/common/phrases-shared.ent\">\n")
+	file.WriteString("  %phrases-shared;\n")
+	file.WriteString("  <!ENTITY % " + *Entity + "_entities SYSTEM \"../shared/" + *Entity + ".ent\">\n")
+	file.WriteString("  %" + *Entity + "_entities;\n")
+	file.WriteString(" ]>\n")
+}
+
+/*
+  <section role="topic" id="hello_world_example">
+  <info>
+    <title id="hello_world_example.title">Hello World Example</title>
+  </info>
+*/
+
+func startNewXMLSection(file os.File, id string, title string, firstHeading bool) {
+	if firstHeading {
+		file.WriteString("<section role=\"topic\" id=\"" + id + "\">\n")
+	} else {
+		file.WriteString("<section id=\"" + id + "\">\n")
+	}
+	file.WriteString("  <info>\n")
+	file.WriteString("    <title id=\"" + id + ".title\">" + title + "</title>\n")
+	file.WriteString("  </info>\n")
+}
+
+func closeXMLSection(file os.File) {
+	file.WriteString("</section>\n")
+}
+
+// Opens an HTML file
+// Name is going to be something like:
+//    serverless.html
+
+// Returns true if we created dir/serverless.rst from serverless.md
+func parseReadmeRST(verbose *bool, name, dir, entity *string) bool {
+	parts := strings.Split(*name, ".") // gives us serverless and md
+
+	if len(parts) != 2 {
+		fmt.Println(verbose, *name+" does not match NAME.EXT")
+		return false
+	}
+
+	if parts[1] != "md" {
+		verbosePrint(verbose, *name+" is not a MD file")
+		return false
+	}
+
+	rstName := parts[0] + ".rst" // serverless.rst
+
+	inFile, err := os.Open(*dir + "/" + *name) // parse serverless.md
+	if err != nil {
+		fmt.Println("Got error opening " + rstName)
+		return false
+	}
+
+	outFileName := *dir + "/" + rstName
+
+	outFile, err := os.Create(outFileName) // Create serveless.rst
+	if err != nil {
+		fmt.Println("Got error creating " + outFileName)
+		return false
+	}
+
+	defer inFile.Close()
+
+	scanner := bufio.NewScanner(inFile)
+
+	lineNumber := 0
+
+	for scanner.Scan() {
+		text := scanner.Text()
+		lineNumber++
+
+		if *verbose {
+			msg := fmt.Sprintf("%s %d %s", "Parsing line", lineNumber, ":")
+			fmt.Println(msg)
+			fmt.Println(text)
+		}
+
+		headingLevel, _, title := getHeading(verbose, text)
+
+		u := getRstUnderscores(headingLevel, &title)
+
+		outFile.WriteString(text + "\n")
+		outFile.WriteString(u + "\n")
+
+		if headingLevel == 2 && title == "Services" {
+			// If it's Services, we are done
+			outFile.Close()
+			return true
+		}
+	}
+
+	return false
+}
+
+// Returns true if we created dir/serverless.xml from serverless.html
+func parseReadmeXML(verbose *bool, name, dir, entity *string) bool {
+	firstLine := true
+
+	parts := strings.Split(*name, ".") // gives us serverless and html
+	xmlName := parts[0] + ".xml"       // serverless.xml
+
+	inFile, err := os.Open(*dir + "/" + *name) // parse serverless.html
+	if err != nil {
+		fmt.Println("Got error opening " + xmlName)
+		return false
+	}
+
+	outFileName := *dir + "/" + xmlName
+
+	outFile, err := os.Create(outFileName)
+	if err != nil {
+		fmt.Println("Got error creating " + outFileName)
+		return false
+	}
+
+	defer inFile.Close()
+
+	// Add initial lines to XML file
+	writePreXML(outFile, entity)
+
+	lineNumber := 0
+	currentHeadingLevel := 1 // The default, top-level heading/H1
+	gotFirstH2 := false      // So we can quit after finding another h2 after <h2 id="services">Services</h2>
+
+	scanner := bufio.NewScanner(inFile)
+
+	firstHeading := true // So the first section has a role="topic"
+
+	for scanner.Scan() {
+		text := scanner.Text()
+		lineNumber++
+
+		if *verbose {
+			msg := fmt.Sprintf("%s %d %s", "Parsing line", lineNumber, ":")
+			fmt.Println(msg)
+			fmt.Println(text)
+		}
+
+		headingLevel, id, title := getHeading(verbose, text)
+
+		if headingLevel == 0 {
+			// just pass the line through, as-is
+			outFile.WriteString(text + "\n")
+			firstLine = false
+			continue
+		} else {
+			if headingLevel == 2 {
+				gotFirstH2 = true
+			}
+			verbosePrint(verbose, "Contained a heading")
+		}
+
+		// If we are in an H2 and get an H3
+		if headingLevel > currentHeadingLevel {
+			firstLine = false
+			verbosePrint(verbose, "")
+			// Start a new section with the id and title
+			startNewXMLSection(*outFile, id, title, firstHeading)
+			firstHeading = false
+
+			currentHeadingLevel = headingLevel
+		} else if headingLevel == currentHeadingLevel {
+			// If this is the first line, don't close the section
+			if !firstLine {
+				closeXMLSection(*outFile)
+			} else {
+				firstLine = false
+			}
+			// Start a new section
+			startNewXMLSection(*outFile, id, title, firstHeading)
+			firstHeading = false
+		} else {
+			// We are in a higher level heading (H2) and get a lower-level heading (H4)
+			// so we need to close currentLevel - headingLevel sections,
+			// then open a new section
+			for currentHeadingLevel > headingLevel {
+				closeXMLSection(*outFile)
+				currentHeadingLevel--
+			}
+
+			startNewXMLSection(*outFile, id, title, firstHeading)
+			firstHeading = false
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Got error scanning " + xmlName)
+		return false
+	}
+
+	// We always have to close a section
+	closeXMLSection(*outFile)
+
+	// Append final lines to XML file
+	writePostXML(verbose, *outFile, currentHeadingLevel)
+
+	outFile.Close()
+
+	return true
+}
+
+// Usage displays the command-line options
+func Usage() {
+	fmt.Println("USAGE:")
+	fmt.Println("")
+	fmt.Println("go run ParseReadmes.go -d DIRECTORY [-c CONFIG] [-v VERBOSE]")
+	fmt.Println(" where:")
+	fmt.Println("  DIRECTORY is the directory in which the readme.html files are found")
+	fmt.Println("  CONFIG is the filename of your config file.")
+	fmt.Println("  if omitted, defaults to config.json")
+	fmt.Println("  -v gives you verbose/debugging info")
+	fmt.Println("")
+}
+
+// Config represents the resources we need to configure before we can run the example
+type Config struct {
+	Abstract  string `json:"Abstract"`
+	ChapAbbv  string `json:"ChapAbbv"`
+	ChapID    string `json:"ChapID"`
+	ChapTitle string `json:"ChapTitle"`
+	Entity    string `json:"Entity"`
+	Format    string `json:"Format"`
+	InfoText  string `json:"InfoText"`
+	SDK       string `json:"SDK"`
+}
+
+// GetConfigInfo creates a Config object from the given JSON file
+func GetConfigInfo(verbose *bool, configFileName *string) (Config, error) {
+	var globalConfig Config
+	// Open config file
+	content, err := ioutil.ReadFile(*configFileName)
+	if err != nil {
+		return globalConfig, err
+	}
+
+	text := string(content)
+
+	err = json.Unmarshal([]byte(text), &globalConfig)
+	if err != nil {
+		return globalConfig, err
+	}
+
+	// Only entry required for RST conversion
+	if globalConfig.Format == "" || globalConfig.SDK == "" {
+		msg := "You must supply a Format entry (rst or xml) and SDK entry in " + *configFileName
+		return globalConfig, errors.New(msg)
+	}
+
+	if globalConfig.Format == "rst" {
+		verbosePrint(verbose, "Format: "+globalConfig.Format)
+		verbosePrint(verbose, "SDK:    "+globalConfig.SDK)
+	}
+
+	// Make sure the remaining entries are there for xml
+	if globalConfig.Abstract == "" ||
+		globalConfig.ChapAbbv == "" ||
+		globalConfig.ChapID == "" ||
+		globalConfig.ChapTitle == "" ||
+		globalConfig.Entity == "" ||
+		globalConfig.InfoText == "" {
+		msg := "You must supply an Abstract, ChapAbbv, ChapID, ChapTitle, Entity, and InfoText entry in " + *configFileName + " for XML format"
+		return globalConfig, errors.New(msg)
+	}
+
+	if globalConfig.Format == "xml" {
+		verbosePrint(verbose, "Abstract:  "+globalConfig.Abstract)
+		verbosePrint(verbose, "ChapAbbv:  "+globalConfig.ChapAbbv)
+		verbosePrint(verbose, "ChapID:    "+globalConfig.ChapID)
+		verbosePrint(verbose, "ChapTitle: "+globalConfig.ChapTitle)
+		verbosePrint(verbose, "Entity:    "+globalConfig.Entity)
+		verbosePrint(verbose, "InfoText:  "+globalConfig.InfoText)
+		verbosePrint(verbose, "SDK:       "+globalConfig.SDK)
+	}
+
+	return globalConfig, nil
+}
+
+func runRST(verbose *bool, configFile *Config, dir *string) bool {
+	// Prep about-examples.rst
+	aboutFileName := *dir + "/about-examples.rst"
+
+	// Create empties the file if it exists
+	abFile, err := os.Create(aboutFileName)
+	if err != nil {
+		fmt.Println("Got error creating " + aboutFileName)
+		fmt.Println(err.Error())
+		return false
+	}
+
+	verbosePrint(verbose, "Created "+aboutFileName)
+
+	defer abFile.Close()
+
+	writePreRSTAb(*abFile, &configFile.SDK, &configFile.ChapTitle)
+
+	files, err := ioutil.ReadDir(*dir)
+	if err != nil {
+		fmt.Println("Got error reading contents of " + *dir + ":")
+		fmt.Println(err.Error())
+		return false
+	}
+
+	verbosePrint(verbose, "Reading contents of "+*dir)
+
+	// f.Name is going to be something like:
+	//    serverless.md
+	for _, f := range files {
+		name := f.Name()
+		_, err = os.Stat(*dir + "/" + name)
+		if err != nil {
+			continue
+		}
+
+		// Make sure we are only parsing MD files
+		parts := strings.Split(name, ".") // gives us serverless and md
+		extension := parts[1]
+
+		if extension == "md" {
+			verbosePrint(verbose, "Parsing MD file: "+name)
+
+			parsed := parseReadmeRST(verbose, &name, dir, &configFile.Entity)
+
+			if parsed {
+				verbosePrint(verbose, "Adding example to parent TOC")
+				abFile.WriteString("   " + parts[0] + "\n")
+			}
+		}
+	}
+
+	return true
+}
+
+func runXML(verbose *bool, configFile Config, dir *string) bool {
+	// Prep about-examples.xml
+	aboutFileName := *dir + "/about-examples.xml"
+
+	// Create empties the file if it exists
+	abFile, err := os.Create(aboutFileName)
+	if err != nil {
+		fmt.Println("Got error creating " + aboutFileName)
+		fmt.Println(err.Error())
+		return false
+	}
+
+	verbosePrint(verbose, "Created "+aboutFileName)
+
+	defer abFile.Close()
+
+	writePreXMLAb(*abFile, configFile.ChapID, configFile.ChapTitle, configFile.ChapAbbv, configFile.Abstract, configFile.InfoText)
+
+	files, err := ioutil.ReadDir(*dir)
+	if err != nil {
+		fmt.Println("Got error reading contents of " + *dir + ":")
+		fmt.Println(err.Error())
+		return false
+	}
+
+	verbosePrint(verbose, "Reading contents of "+*dir)
+
+	// f.Name is going to be something like:
+	//    serverless.html
+	for _, f := range files {
+		name := f.Name()
+		_, err = os.Stat(*dir + "/" + name)
+		if err != nil {
+			continue
+		}
+
+		// Make sure we are only parsing HTML files
+		parts := strings.Split(name, ".") // gives us serverless and html
+		extension := parts[1]
+
+		if extension == "html" {
+			verbosePrint(verbose, "Parsing HTML file: "+name)
+
+			parsed := parseReadmeXML(verbose, &name, dir, &configFile.Entity)
+
+			if parsed {
+				verbosePrint(verbose, "Adding package to list of libraries")
+				abFile.WriteString("<xi:include href=\"" + parts[0] + ".xml\"/>\n")
+			}
+		}
+	}
+
+	// Close about-libraries.xml
+	abFile.WriteString("</chapter>")
+
+	return true
+}
+
+func main() {
+	// Process command line args
+	dir := flag.String("d", "", "Directory containing packages in HTML files")
+	config := flag.String("c", "config.json", "The name of your configuration file, default is config.json")
+	verbose := flag.Bool("v", false, "Whether to show verbose output")
+	help := flag.Bool("h", false, "Display usage and quit")
+
+	flag.Parse()
+
+	if *help {
+		Usage()
+		return
+	}
+
+	// Make sure we have a directory and config file
+	if *dir == "" || *config == "" {
+		Usage()
+		return
+	}
+
+	verbosePrint(verbose, "Determining whether "+*dir+" exists.")
+
+	// Confirm dir exists
+	_, err := os.Stat(*dir)
+	if err != nil {
+		fmt.Println(*dir + " does not exist.")
+		return
+	}
+
+	verbosePrint(verbose, *dir+" exists")
+
+	configFile, err := GetConfigInfo(verbose, config)
+	if err != nil {
+		fmt.Println("Got an error reading config file " + *config + ":")
+		fmt.Println(err)
+		return
+	}
+
+	done := false
+
+	switch configFile.Format {
+	case "xml":
+		done = runXML(verbose, configFile, dir)
+		break
+	case "rst":
+		done = runRST(verbose, &configFile, dir)
+		break
+	default:
+		fmt.Println("You must specify rst or xml as the Format in " + *config)
+		return
+	}
+
+	if done {
+		if configFile.Format == "rst" {
+			fmt.Println("Successfully scanned all readme.md files to create Sphinx topic")
+		} else {
+			fmt.Println("Successfully scanned all readme.html files to create Zonbook chapter")
+		}
+	} else {
+		if configFile.Format == "rst" {
+			fmt.Println("Failed to scan all readme.md files to create Sphinx topic")
+		} else {
+			fmt.Println("Failed to scan all readme.html files to create Zonbook chapter")
+		}
+	}
+}

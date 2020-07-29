@@ -3,6 +3,7 @@ bin/
 target/
 README.html
 *.swp
+*.sln
 *.txt
 .DS_Store
 launch.json

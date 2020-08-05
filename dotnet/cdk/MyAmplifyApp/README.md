@@ -1,6 +1,6 @@
-# Create a Cognito user pool
+# Welcome to your CDK C# project!
 
-This project creates a Cognito user pool in C# using the CDK.
+This is a blank project for C# development with CDK.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 

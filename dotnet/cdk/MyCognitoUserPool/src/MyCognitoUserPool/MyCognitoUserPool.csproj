@@ -7,8 +7,9 @@
 
   <ItemGroup>
     <!-- CDK Construct Library dependencies -->
-    <PackageReference Include="Amazon.CDK" Version="1.53.0" />
-    <PackageReference Include="Amazon.CDK.AWS.Cognito" Version="1.53.0" />
+    <PackageReference Include="Amazon.CDK" Version="1.56.0" />
+    <PackageReference Include="Amazon.CDK.AWS.Amplify" Version="1.56.0" />
+    <PackageReference Include="Amazon.CDK.AWS.Cognito" Version="1.56.0" />
 
     <!-- jsii Roslyn analyzers (un-comment to obtain compile-time checks for missing required props
     <PackageReference Include="Amazon.Jsii.Analyzers" Version="*" PrivateAssets="all" />

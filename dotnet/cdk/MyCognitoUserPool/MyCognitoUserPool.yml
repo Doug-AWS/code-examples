@@ -54,6 +54,14 @@ Resources:
         SmsMessage: Hello {username}, Thanks for signing up to our awesome app! Your verification code is {####}
     Metadata:
       aws:cdk:path: MyCognitoUserPoolStack/myuserpool/Resource
+  myuserpoolCognitoDomain3CADA6A3:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: my-awesome-app
+      UserPoolId:
+        Ref: myuserpool01998219
+    Metadata:
+      aws:cdk:path: MyCognitoUserPoolStack/myuserpool/CognitoDomain/Resource
   myuserpoolMyUserPoolClient0770E761:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -78,7 +86,7 @@ Resources:
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Modules: aws-cdk=1.53.0,@aws-cdk/assets=1.53.0,@aws-cdk/aws-certificatemanager=1.53.0,@aws-cdk/aws-cloudformation=1.53.0,@aws-cdk/aws-cloudwatch=1.53.0,@aws-cdk/aws-codeguruprofiler=1.53.0,@aws-cdk/aws-cognito=1.53.0,@aws-cdk/aws-ec2=1.53.0,@aws-cdk/aws-efs=1.53.0,@aws-cdk/aws-events=1.53.0,@aws-cdk/aws-iam=1.53.0,@aws-cdk/aws-kms=1.53.0,@aws-cdk/aws-lambda=1.53.0,@aws-cdk/aws-logs=1.53.0,@aws-cdk/aws-route53=1.53.0,@aws-cdk/aws-s3=1.53.0,@aws-cdk/aws-s3-assets=1.53.0,@aws-cdk/aws-sns=1.53.0,@aws-cdk/aws-sqs=1.53.0,@aws-cdk/aws-ssm=1.53.0,@aws-cdk/cloud-assembly-schema=1.53.0,@aws-cdk/core=1.53.0,@aws-cdk/custom-resources=1.53.0,@aws-cdk/cx-api=1.53.0,@aws-cdk/region-info=1.53.0,jsii-runtime=DotNet/3.1.6/.NETCoreApp,Version=v3.1/1.0.0.0
+      Modules: aws-cdk=1.54.0,@aws-cdk/assets=1.53.0,@aws-cdk/aws-certificatemanager=1.53.0,@aws-cdk/aws-cloudformation=1.53.0,@aws-cdk/aws-cloudwatch=1.53.0,@aws-cdk/aws-codeguruprofiler=1.53.0,@aws-cdk/aws-cognito=1.53.0,@aws-cdk/aws-ec2=1.53.0,@aws-cdk/aws-efs=1.53.0,@aws-cdk/aws-events=1.53.0,@aws-cdk/aws-iam=1.53.0,@aws-cdk/aws-kms=1.53.0,@aws-cdk/aws-lambda=1.53.0,@aws-cdk/aws-logs=1.53.0,@aws-cdk/aws-route53=1.53.0,@aws-cdk/aws-s3=1.53.0,@aws-cdk/aws-s3-assets=1.53.0,@aws-cdk/aws-sns=1.53.0,@aws-cdk/aws-sqs=1.53.0,@aws-cdk/aws-ssm=1.53.0,@aws-cdk/cloud-assembly-schema=1.53.0,@aws-cdk/core=1.53.0,@aws-cdk/custom-resources=1.53.0,@aws-cdk/cx-api=1.53.0,@aws-cdk/region-info=1.53.0,jsii-runtime=DotNet/3.1.6/.NETCoreApp,Version=v3.1/1.0.0.0
     Condition: CDKMetadataAvailable
 Conditions:
   CDKMetadataAvailable:

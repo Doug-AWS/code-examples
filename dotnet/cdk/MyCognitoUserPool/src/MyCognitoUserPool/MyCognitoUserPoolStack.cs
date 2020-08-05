@@ -1,5 +1,6 @@
 using Amazon.CDK;
 using Amazon.CDK.AWS.Cognito;
+using System;
 
 namespace MyCognitoUserPool
 {
@@ -9,6 +10,7 @@ namespace MyCognitoUserPool
         {
             // The code that defines your stack goes here
             var userpool = new UserPool(this, "myuserpool", new UserPoolProps {
+                SignInCaseSensitive = false, // So user can sign in as username, Username, etc.
                 SelfSignUpEnabled = true,
                 UserPoolName = "MyUserPool",
                 UserVerification = new UserVerificationConfig {
@@ -23,7 +25,15 @@ namespace MyCognitoUserPool
                 }
             });
 
-            userpool.AddClient("MyUserPoolClient", new UserPoolClientProps {});
+            userpool.AddDomain("CognitoDomain", new UserPoolDomainProps { // UserPoolDomainProps implements IUserPoolDomainOptions {
+                CognitoDomain = new CognitoDomainOptions {                
+                    DomainPrefix = "my-awesome-app"
+                }
+            });
+
+            userpool.AddClient("MyUserPoolClient", new UserPoolClientProps {
+
+            });
         }
     }
 }

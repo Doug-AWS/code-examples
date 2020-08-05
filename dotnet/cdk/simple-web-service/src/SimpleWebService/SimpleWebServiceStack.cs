@@ -9,10 +9,12 @@ namespace SimpleWebService
     {
         internal SimpleWebServiceStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
-            var userTable = new Table(this, "questions", new TableProps {
-                PartitionKey = new Attribute { 
-                    Name = "id", 
-                    Type = AttributeType.STRING 
+            var userTable = new Table(this, "questions", new TableProps
+            {
+                PartitionKey = new Attribute
+                {
+                    Name = "id",
+                    Type = AttributeType.STRING
                 }
             });
 
@@ -20,8 +22,9 @@ namespace SimpleWebService
 
             var handler = new Function(this, "SimpleServiceApiHandler", new FunctionProps {
                Runtime = Runtime.DOTNET_CORE_3_1,
-               Code = Code.FromAsset("resources"),
-               Handler = "simpleWebService.handler"
+               Code = Code.FromAsset("src/SimpleWebService/resources"), // path from CDK app root (foler that contains cdk.json)
+               Handler = "LambdaService.handler" // LambdaService is the name of the source file, without the extension;
+                                                    // handler is the function within simpleWebService.cs that is called to invoke the Lambda function.
             });
 
             // So Lambda function can access the table

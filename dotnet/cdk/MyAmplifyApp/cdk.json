@@ -1,0 +1,7 @@
+{
+  "app": "dotnet run -p src/MyAmplifyApp/MyAmplifyApp.csproj",
+  "context": {
+    "@aws-cdk/core:enableStackNameDuplicates": "true",
+    "aws-cdk:enableDiffNoFail": "true"
+  }
+}

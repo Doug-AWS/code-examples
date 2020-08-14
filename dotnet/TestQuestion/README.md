@@ -1,0 +1,1 @@
+This project is a placeholder for creating test questions in C# for prospective colleagues.

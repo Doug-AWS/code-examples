@@ -1,13 +1,20 @@
 using System.Threading.Tasks;
 using Amazon.Lambda;
+using Amazon.Lambda.Core;
+
+
+using Amazon.Lambda.DynamoDBEvents;
+
+
 
 
 namespace SimpleWebService
 {
     public class LambdaWebService
     {
-        public async Task FunctionHandler(DynamoDBEvent dynamoEvent, ILambdaContext context)
-	{
+        // Called whenever a new record is added to a DynamoDB table
+		public async Task FunctionHandler(DynamoDBEvent dynamoEvent, ILambdaContext context)
+		{
 		context.Logger.LogLine($"Beginning to process {dynamoEvent.Records.Count} records...");
 
 		foreach (var record in dynamoEvent.Records)

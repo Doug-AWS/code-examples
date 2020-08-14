@@ -1,0 +1,17 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree"
+      },
+      "MyWidgetServiceStack": {
+        "id": "MyWidgetServiceStack",
+        "path": "MyWidgetServiceStack"
+      }
+    }
+  }
+}

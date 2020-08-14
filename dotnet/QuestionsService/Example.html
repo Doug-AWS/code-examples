@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <title>Creating a serverless app in C#</title>
+  </head>
+  <body>
+    <h1>Creating a serverless app in C#</h1>
+
+    <p>
+      This document walks you through the steps to create a serverless app in C#.
+      We will use the CDK to create the resources,
+      including:
+    </p>
+
+    <ul>
+      <li>An AWS Lambda function</li>
+      <li>An Amazon API Gateway API to call the Lambda function</li>
+      <li>An Amazon S3 bucket that contains the Lambda function code</li>
+      <li>An Amazon DynamoDB table to store our question</li>
+    </ul>
+
+    <p>Let's get started.</p>
+
+    <ol>
+      <li>
+        Create a new folder for our CDK project.
+        Let's call it <i>QuestionsService</i>,
+        and navigate into it.
+
+        <pre>mkdir QuestionsService
+cd QuestionsService</pre>          
+      </li>
+      <li>
+        Run the following command to create an empty CDK project.
+        <pre>cdk init --language csharp</pre>
+      </li>
+      <li>Open <i>src\QuestionsService.sln</i> in Visual Studio.</li>
+      <li>Select <b>Tools</b>, <b>NuGet Package Manager</b>, 
+        <b>Manage NuGet Packages for Solution in Visual Studio</b>,
+        select <b>Browse</b> and add the following packages.
+        <ul>
+          <li>Amazon.CDK.AWS.ApiGateway</li>
+          <li>Amazon.CDK.AWS.DynamoDB</li>
+          <li>Amazon.CDK.AWS.Lambda</li>
+          <li>Amazon.CDK.AWS.S3</li>
+          <li>Amazon.Lambda.Core</li>
+        </ul>
+      </li>
+      <li>
+        Let's create a Lambda function to get all of the existing questions
+        (obviously we don't have any yet)
+        <br/>
+        In Visual Studio, create a new folder, <i>Resources</i>,
+        for our Lambda function in the <i>QuestionsService</i> folder.
+      </li>
+      <li>Create <i>QuestionsFunctions.cs</i> in <i>Resources</i>.</li>
+      <li>Add the following code to <i>QuestionsFunctions.cs</i>:
+        <pre>
+        </pre>
+      </li>
+    </ol>
+    
+        
+    
+  </body>
+</html>

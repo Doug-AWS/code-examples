@@ -1,0 +1,26 @@
+{
+  "version": "5.0.0",
+  "artifacts": {
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "MyWidgetServiceStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "MyWidgetServiceStack.template.json"
+      }
+    }
+  },
+  "runtime": {
+    "libraries": {
+      "@aws-cdk/cloud-assembly-schema": "1.58.0",
+      "@aws-cdk/cx-api": "1.58.0",
+      "@aws-cdk/core": "1.58.0",
+      "jsii-runtime": "DotNet/3.1.6/.NETCoreApp,Version=v3.1/1.0.0.0"
+    }
+  }
+}

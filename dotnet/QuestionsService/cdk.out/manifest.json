@@ -1,0 +1,458 @@
+{
+  "version": "5.0.0",
+  "artifacts": {
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "QuestionsServiceStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "QuestionsServiceStack.template.json"
+      },
+      "metadata": {
+        "/QuestionsServiceStack": [
+          {
+            "type": "aws:cdk:asset",
+            "data": {
+              "path": "asset.559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f",
+              "id": "559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f",
+              "packaging": "zip",
+              "sourceHash": "559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f",
+              "s3BucketParameter": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3BucketADEAEFC3",
+              "s3KeyParameter": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3VersionKey84C99050",
+              "artifactHashParameter": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fArtifactHash9E39BC8A"
+            },
+            "trace": [
+              "ConstructNode.addMetadata (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\construct-compat.js:312:62)",
+              "LegacyStackSynthesizer.doAddFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:130:29)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:58:25)",
+              "Stack.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack.js:358:33)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:62:31)",
+              "new Asset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-s3-assets\\lib\\asset.js:36:44)",
+              "AssetCode.bind (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\code.js:137:26)",
+              "new Function (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function.js:80:33)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/QuestionsTable": [
+          {
+            "type": "aws:cdk:hasPhysicalName",
+            "data": {
+              "Ref": "QuestionsQuestionsTableC39664D7"
+            },
+            "trace": [
+              "ConstructNode.addMetadata (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\construct-compat.js:312:62)",
+              "new Table (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-dynamodb\\lib\\table.js:331:23)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/QuestionsTable/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsTableC39664D7",
+            "trace": [
+              "new Table (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-dynamodb\\lib\\table.js:306:22)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsHandlerServiceRole376A1CC0",
+            "trace": [
+              "new Role (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-iam\\lib\\role.js:43:22)",
+              "new Function (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function.js:62:35)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsHandlerServiceRoleDefaultPolicy1122345C",
+            "trace": [
+              "new Policy (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-iam\\lib\\policy.js:42:26)",
+              "Role.addToPrincipalPolicy (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-iam\\lib\\role.js:165:34)",
+              "Function.addToPrincipal (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-iam\\lib\\grant.js:69:65)",
+              "Table.combinedGrant (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-dynamodb\\lib\\table.js:246:35)",
+              "Table.grantReadWriteData (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-dynamodb\\lib\\table.js:156:21)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/QuestionsHandler/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsHandler19F957F4",
+            "trace": [
+              "new Function (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function.js:106:26)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPI59F42C80",
+            "trace": [
+              "new RestApi (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:236:26)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/CloudWatchRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPICloudWatchRole9DD1BF7A",
+            "trace": [
+              "new Role (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-iam\\lib\\role.js:43:22)",
+              "RestApi.configureCloudWatchRole (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:122:22)",
+              "new RestApi (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:252:18)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/Account": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPIAccount964E78CA",
+            "trace": [
+              "RestApi.configureCloudWatchRole (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:126:26)",
+              "new RestApi (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:252:18)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPIDeploymentC66C32B9c1d38a00d0cadfc4a213a605dcb4f853",
+            "trace": [
+              "new Deployment (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\deployment.js:41:25)",
+              "RestApi.configureDeployment (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:134:38)",
+              "new RestApi (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:254:14)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPIDeploymentStageprod0B67CA26",
+            "trace": [
+              "new Stage (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\stage.js:48:26)",
+              "RestApi.configureDeployment (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:142:36)",
+              "new RestApi (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:254:14)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPIEndpoint1F735D7A",
+            "trace": [
+              "RestApi.configureDeployment (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:146:13)",
+              "new RestApi (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\restapi.js:254:14)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/Default/GET/ApiPermission.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPIGETApiPermissionQuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6GET5F9D6FCF",
+            "trace": [
+              "Function.addPermission (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function-base.js:24:9)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.completeCallback (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7418:25)",
+              "KernelHost.callbackHandler (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7398:33)",
+              "Function.value (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8106:41)",
+              "LambdaIntegration.bind (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\integrations\\lambda.js:33:22)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.completeCallback (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7418:25)",
+              "KernelHost.callbackHandler (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7398:33)",
+              "LambdaIntegration.value (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8106:41)",
+              "new Method (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\method.js:33:40)",
+              "RootResource.addMethod (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\resource.js:18:16)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/Default/GET/ApiPermission.Test.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPIGETApiPermissionTestQuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6GET5A292068",
+            "trace": [
+              "Function.addPermission (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function-base.js:24:9)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.completeCallback (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7418:25)",
+              "KernelHost.callbackHandler (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7398:33)",
+              "Function.value (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8106:41)",
+              "LambdaIntegration.bind (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\integrations\\lambda.js:40:26)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.completeCallback (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7418:25)",
+              "KernelHost.callbackHandler (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7398:33)",
+              "LambdaIntegration.value (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8106:41)",
+              "new Method (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\method.js:33:40)",
+              "RootResource.addMethod (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\resource.js:18:16)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/Questions/Questions-API/Default/GET/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QuestionsQuestionsAPIGET44D5FA2B",
+            "trace": [
+              "new Method (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\method.js:49:26)",
+              "RootResource.addMethod (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-apigateway\\lib\\resource.js:18:16)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:51",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7746:25",
+              "Kernel._ensureSync (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8371:20)",
+              "Kernel.invoke (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7745:26)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/S3Bucket": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3BucketADEAEFC3",
+            "trace": [
+              "new FileAssetParameters (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\private\\asset-parameters.js:12:36)",
+              "LegacyStackSynthesizer.doAddFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:120:22)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:58:25)",
+              "Stack.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack.js:358:33)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:62:31)",
+              "new Asset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-s3-assets\\lib\\asset.js:36:44)",
+              "AssetCode.bind (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\code.js:137:26)",
+              "new Function (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function.js:80:33)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/S3VersionKey": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3VersionKey84C99050",
+            "trace": [
+              "new FileAssetParameters (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\private\\asset-parameters.js:16:35)",
+              "LegacyStackSynthesizer.doAddFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:120:22)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:58:25)",
+              "Stack.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack.js:358:33)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:62:31)",
+              "new Asset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-s3-assets\\lib\\asset.js:36:44)",
+              "AssetCode.bind (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\code.js:137:26)",
+              "new Function (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function.js:80:33)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ],
+        "/QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/ArtifactHash": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fArtifactHash9E39BC8A",
+            "trace": [
+              "new FileAssetParameters (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\private\\asset-parameters.js:20:38)",
+              "LegacyStackSynthesizer.doAddFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:120:22)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:58:25)",
+              "Stack.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack.js:358:33)",
+              "LegacyStackSynthesizer.addFileAsset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\core\\lib\\stack-synthesizers\\legacy.js:62:31)",
+              "new Asset (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-s3-assets\\lib\\asset.js:36:44)",
+              "AssetCode.bind (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\code.js:137:26)",
+              "new Function (C:\\Users\\dougsch\\AppData\\Local\\Temp\\jsii-kernel-8R3xkr\\node_modules\\@aws-cdk\\aws-lambda\\lib\\function.js:80:33)",
+              "C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:49",
+              "Kernel._wrapSandboxCode (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:8395:20)",
+              "Kernel._create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7922:26)",
+              "Kernel.create (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7666:21)",
+              "KernelHost.processRequest (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7446:28)",
+              "KernelHost.run (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7384:14)",
+              "Immediate._onImmediate (C:\\Users\\dougsch\\AppData\\Local\\Temp\\rbpvcplp.lfm\\jsii-runtime.js:7387:37)",
+              "processImmediate (internal/timers.js:456:21)"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "runtime": {
+    "libraries": {
+      "@aws-cdk/cloud-assembly-schema": "1.58.0",
+      "@aws-cdk/cx-api": "1.58.0",
+      "@aws-cdk/core": "1.58.0",
+      "@aws-cdk/region-info": "1.58.0",
+      "@aws-cdk/aws-iam": "1.58.0",
+      "@aws-cdk/aws-cloudwatch": "1.58.0",
+      "@aws-cdk/aws-autoscaling-common": "1.58.0",
+      "@aws-cdk/aws-applicationautoscaling": "1.58.0",
+      "@aws-cdk/aws-kms": "1.58.0",
+      "@aws-cdk/aws-events": "1.58.0",
+      "@aws-cdk/aws-s3": "1.58.0",
+      "@aws-cdk/aws-logs": "1.58.0",
+      "@aws-cdk/aws-ssm": "1.58.0",
+      "@aws-cdk/aws-ec2": "1.58.0",
+      "@aws-cdk/assets": "1.58.0",
+      "@aws-cdk/aws-s3-assets": "1.58.0",
+      "@aws-cdk/aws-efs": "1.58.0",
+      "@aws-cdk/aws-sqs": "1.58.0",
+      "@aws-cdk/aws-codeguruprofiler": "1.58.0",
+      "@aws-cdk/aws-lambda": "1.58.0",
+      "@aws-cdk/aws-sns": "1.58.0",
+      "@aws-cdk/aws-cloudformation": "1.58.0",
+      "@aws-cdk/custom-resources": "1.58.0",
+      "@aws-cdk/aws-dynamodb": "1.58.0",
+      "@aws-cdk/aws-route53": "1.58.0",
+      "@aws-cdk/aws-certificatemanager": "1.58.0",
+      "@aws-cdk/aws-elasticloadbalancingv2": "1.58.0",
+      "@aws-cdk/aws-apigateway": "1.58.0",
+      "jsii-runtime": "DotNet/3.1.6/.NETCoreApp,Version=v3.1/1.0.0.0"
+    }
+  }
+}

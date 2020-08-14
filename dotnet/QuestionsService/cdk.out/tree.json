@@ -1,0 +1,526 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree"
+      },
+      "QuestionsServiceStack": {
+        "id": "QuestionsServiceStack",
+        "path": "QuestionsServiceStack",
+        "children": {
+          "Questions": {
+            "id": "Questions",
+            "path": "QuestionsServiceStack/Questions",
+            "children": {
+              "QuestionsTable": {
+                "id": "QuestionsTable",
+                "path": "QuestionsServiceStack/Questions/QuestionsTable",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "QuestionsServiceStack/Questions/QuestionsTable/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::DynamoDB::Table",
+                      "aws:cdk:cloudformation:props": {
+                        "keySchema": [
+                          {
+                            "attributeName": "id",
+                            "keyType": "HASH"
+                          }
+                        ],
+                        "attributeDefinitions": [
+                          {
+                            "attributeName": "id",
+                            "attributeType": "S"
+                          }
+                        ],
+                        "provisionedThroughput": {
+                          "readCapacityUnits": 5,
+                          "writeCapacityUnits": 5
+                        },
+                        "tableName": "QuestionsTable"
+                      }
+                    }
+                  },
+                  "ScalingRole": {
+                    "id": "ScalingRole",
+                    "path": "QuestionsServiceStack/Questions/QuestionsTable/ScalingRole"
+                  }
+                }
+              },
+              "QuestionsHandler": {
+                "id": "QuestionsHandler",
+                "path": "QuestionsServiceStack/Questions/QuestionsHandler",
+                "children": {
+                  "ServiceRole": {
+                    "id": "ServiceRole",
+                    "path": "QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "DefaultPolicy": {
+                        "id": "DefaultPolicy",
+                        "path": "QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole/DefaultPolicy",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole/DefaultPolicy/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                              "aws:cdk:cloudformation:props": {
+                                "policyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": [
+                                        "dynamodb:BatchGetItem",
+                                        "dynamodb:GetRecords",
+                                        "dynamodb:GetShardIterator",
+                                        "dynamodb:Query",
+                                        "dynamodb:GetItem",
+                                        "dynamodb:Scan",
+                                        "dynamodb:BatchWriteItem",
+                                        "dynamodb:PutItem",
+                                        "dynamodb:UpdateItem",
+                                        "dynamodb:DeleteItem"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": [
+                                        {
+                                          "Fn::GetAtt": [
+                                            "QuestionsQuestionsTableC39664D7",
+                                            "Arn"
+                                          ]
+                                        },
+                                        {
+                                          "Ref": "AWS::NoValue"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "policyName": "QuestionsQuestionsHandlerServiceRoleDefaultPolicy1122345C",
+                                "roles": [
+                                  {
+                                    "Ref": "QuestionsQuestionsHandlerServiceRole376A1CC0"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Code": {
+                    "id": "Code",
+                    "path": "QuestionsServiceStack/Questions/QuestionsHandler/Code",
+                    "children": {
+                      "Stage": {
+                        "id": "Stage",
+                        "path": "QuestionsServiceStack/Questions/QuestionsHandler/Code/Stage"
+                      },
+                      "AssetBucket": {
+                        "id": "AssetBucket",
+                        "path": "QuestionsServiceStack/Questions/QuestionsHandler/Code/AssetBucket"
+                      }
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "QuestionsServiceStack/Questions/QuestionsHandler/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                      "aws:cdk:cloudformation:props": {
+                        "code": {
+                          "s3Bucket": {
+                            "Ref": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3BucketADEAEFC3"
+                          },
+                          "s3Key": {
+                            "Fn::Join": [
+                              "",
+                              [
+                                {
+                                  "Fn::Select": [
+                                    0,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3VersionKey84C99050"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Fn::Select": [
+                                    1,
+                                    {
+                                      "Fn::Split": [
+                                        "||",
+                                        {
+                                          "Ref": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3VersionKey84C99050"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        },
+                        "handler": "QuestionsService::QuestionsService.QuestionsFunctions::Handler",
+                        "role": {
+                          "Fn::GetAtt": [
+                            "QuestionsQuestionsHandlerServiceRole376A1CC0",
+                            "Arn"
+                          ]
+                        },
+                        "runtime": "dotnetcore3.1",
+                        "environment": {
+                          "variables": {
+                            "TABLE": {
+                              "Ref": "QuestionsQuestionsTableC39664D7"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "Questions-API": {
+                "id": "Questions-API",
+                "path": "QuestionsServiceStack/Questions/Questions-API",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "QuestionsServiceStack/Questions/Questions-API/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::ApiGateway::RestApi",
+                      "aws:cdk:cloudformation:props": {
+                        "description": "This service services questions.",
+                        "name": "Questions Service"
+                      }
+                    }
+                  },
+                  "CloudWatchRole": {
+                    "id": "CloudWatchRole",
+                    "path": "QuestionsServiceStack/Questions/Questions-API/CloudWatchRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "QuestionsServiceStack/Questions/Questions-API/CloudWatchRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "apigateway.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Account": {
+                    "id": "Account",
+                    "path": "QuestionsServiceStack/Questions/Questions-API/Account",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::ApiGateway::Account",
+                      "aws:cdk:cloudformation:props": {
+                        "cloudWatchRoleArn": {
+                          "Fn::GetAtt": [
+                            "QuestionsQuestionsAPICloudWatchRole9DD1BF7A",
+                            "Arn"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "Deployment": {
+                    "id": "Deployment",
+                    "path": "QuestionsServiceStack/Questions/Questions-API/Deployment",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "QuestionsServiceStack/Questions/Questions-API/Deployment/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::ApiGateway::Deployment",
+                          "aws:cdk:cloudformation:props": {
+                            "restApiId": {
+                              "Ref": "QuestionsQuestionsAPI59F42C80"
+                            },
+                            "description": "Automatically created by the RestApi construct"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "DeploymentStage.prod": {
+                    "id": "DeploymentStage.prod",
+                    "path": "QuestionsServiceStack/Questions/Questions-API/DeploymentStage.prod",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "QuestionsServiceStack/Questions/Questions-API/DeploymentStage.prod/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::ApiGateway::Stage",
+                          "aws:cdk:cloudformation:props": {
+                            "restApiId": {
+                              "Ref": "QuestionsQuestionsAPI59F42C80"
+                            },
+                            "deploymentId": {
+                              "Ref": "QuestionsQuestionsAPIDeploymentC66C32B9c1d38a00d0cadfc4a213a605dcb4f853"
+                            },
+                            "stageName": "prod"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Endpoint": {
+                    "id": "Endpoint",
+                    "path": "QuestionsServiceStack/Questions/Questions-API/Endpoint"
+                  },
+                  "Default": {
+                    "id": "Default",
+                    "path": "QuestionsServiceStack/Questions/Questions-API/Default",
+                    "children": {
+                      "GET": {
+                        "id": "GET",
+                        "path": "QuestionsServiceStack/Questions/Questions-API/Default/GET",
+                        "children": {
+                          "ApiPermission.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..": {
+                            "id": "ApiPermission.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..",
+                            "path": "QuestionsServiceStack/Questions/Questions-API/Default/GET/ApiPermission.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                              "aws:cdk:cloudformation:props": {
+                                "action": "lambda:InvokeFunction",
+                                "functionName": {
+                                  "Fn::GetAtt": [
+                                    "QuestionsQuestionsHandler19F957F4",
+                                    "Arn"
+                                  ]
+                                },
+                                "principal": "apigateway.amazonaws.com",
+                                "sourceArn": {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      "arn:",
+                                      {
+                                        "Ref": "AWS::Partition"
+                                      },
+                                      ":execute-api:",
+                                      {
+                                        "Ref": "AWS::Region"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "AWS::AccountId"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "QuestionsQuestionsAPI59F42C80"
+                                      },
+                                      "/",
+                                      {
+                                        "Ref": "QuestionsQuestionsAPIDeploymentStageprod0B67CA26"
+                                      },
+                                      "/GET/"
+                                    ]
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          "ApiPermission.Test.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..": {
+                            "id": "ApiPermission.Test.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..",
+                            "path": "QuestionsServiceStack/Questions/Questions-API/Default/GET/ApiPermission.Test.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                              "aws:cdk:cloudformation:props": {
+                                "action": "lambda:InvokeFunction",
+                                "functionName": {
+                                  "Fn::GetAtt": [
+                                    "QuestionsQuestionsHandler19F957F4",
+                                    "Arn"
+                                  ]
+                                },
+                                "principal": "apigateway.amazonaws.com",
+                                "sourceArn": {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      "arn:",
+                                      {
+                                        "Ref": "AWS::Partition"
+                                      },
+                                      ":execute-api:",
+                                      {
+                                        "Ref": "AWS::Region"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "AWS::AccountId"
+                                      },
+                                      ":",
+                                      {
+                                        "Ref": "QuestionsQuestionsAPI59F42C80"
+                                      },
+                                      "/test-invoke-stage/GET/"
+                                    ]
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "QuestionsServiceStack/Questions/Questions-API/Default/GET/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::ApiGateway::Method",
+                              "aws:cdk:cloudformation:props": {
+                                "httpMethod": "GET",
+                                "resourceId": {
+                                  "Fn::GetAtt": [
+                                    "QuestionsQuestionsAPI59F42C80",
+                                    "RootResourceId"
+                                  ]
+                                },
+                                "restApiId": {
+                                  "Ref": "QuestionsQuestionsAPI59F42C80"
+                                },
+                                "authorizationType": "NONE",
+                                "integration": {
+                                  "type": "AWS_PROXY",
+                                  "uri": {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":apigateway:",
+                                        {
+                                          "Ref": "AWS::Region"
+                                        },
+                                        ":lambda:path/2015-03-31/functions/",
+                                        {
+                                          "Fn::GetAtt": [
+                                            "QuestionsQuestionsHandler19F957F4",
+                                            "Arn"
+                                          ]
+                                        },
+                                        "/invocations"
+                                      ]
+                                    ]
+                                  },
+                                  "integrationHttpMethod": "POST",
+                                  "requestTemplates": {
+                                    "application/json": "{ \"statusCode\": \"200\" }"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "AssetParameters": {
+            "id": "AssetParameters",
+            "path": "QuestionsServiceStack/AssetParameters",
+            "children": {
+              "559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f": {
+                "id": "559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f",
+                "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f",
+                "children": {
+                  "S3Bucket": {
+                    "id": "S3Bucket",
+                    "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/S3Bucket"
+                  },
+                  "S3VersionKey": {
+                    "id": "S3VersionKey",
+                    "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/S3VersionKey"
+                  },
+                  "ArtifactHash": {
+                    "id": "ArtifactHash",
+                    "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/ArtifactHash"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

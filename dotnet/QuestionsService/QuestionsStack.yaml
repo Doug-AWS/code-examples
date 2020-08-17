@@ -1,0 +1,329 @@
+Resources:
+  QuestionsQuestionsTableC39664D7:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: QuestionsTable
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/QuestionsTable/Resource
+  QuestionsQuestionsHandlerServiceRole376A1CC0:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole/Resource
+  QuestionsQuestionsHandlerServiceRoleDefaultPolicy1122345C:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:Query
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:BatchWriteItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - QuestionsQuestionsTableC39664D7
+                  - Arn
+              - Ref: AWS::NoValue
+        Version: "2012-10-17"
+      PolicyName: QuestionsQuestionsHandlerServiceRoleDefaultPolicy1122345C
+      Roles:
+        - Ref: QuestionsQuestionsHandlerServiceRole376A1CC0
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/QuestionsHandler/ServiceRole/DefaultPolicy/Resource
+  QuestionsQuestionsHandler19F957F4:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3Bucket1250439A
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005
+      Handler: QuestionsService::QuestionsService.QuestionsFunctions::Handler
+      Role:
+        Fn::GetAtt:
+          - QuestionsQuestionsHandlerServiceRole376A1CC0
+          - Arn
+      Runtime: dotnetcore3.1
+      Environment:
+        Variables:
+          TABLE:
+            Ref: QuestionsQuestionsTableC39664D7
+    DependsOn:
+      - QuestionsQuestionsHandlerServiceRoleDefaultPolicy1122345C
+      - QuestionsQuestionsHandlerServiceRole376A1CC0
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/QuestionsHandler/Resource
+      aws:asset:path: asset.6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4
+      aws:asset:property: Code
+  QuestionsQuestionsAPI59F42C80:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: This service services questions.
+      Name: Questions Service
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/Resource
+  QuestionsQuestionsAPICloudWatchRole9DD1BF7A:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/CloudWatchRole/Resource
+  QuestionsQuestionsAPIAccount964E78CA:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+          - QuestionsQuestionsAPICloudWatchRole9DD1BF7A
+          - Arn
+    DependsOn:
+      - QuestionsQuestionsAPI59F42C80
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/Account
+  QuestionsQuestionsAPIDeploymentC66C32B9c1d38a00d0cadfc4a213a605dcb4f853:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId:
+        Ref: QuestionsQuestionsAPI59F42C80
+      Description: Automatically created by the RestApi construct
+    DependsOn:
+      - QuestionsQuestionsAPIGET44D5FA2B
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/Deployment/Resource
+  QuestionsQuestionsAPIDeploymentStageprod0B67CA26:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId:
+        Ref: QuestionsQuestionsAPI59F42C80
+      DeploymentId:
+        Ref: QuestionsQuestionsAPIDeploymentC66C32B9c1d38a00d0cadfc4a213a605dcb4f853
+      StageName: prod
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/DeploymentStage.prod/Resource
+  QuestionsQuestionsAPIGETApiPermissionQuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6GET5F9D6FCF:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - QuestionsQuestionsHandler19F957F4
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: QuestionsQuestionsAPI59F42C80
+            - /
+            - Ref: QuestionsQuestionsAPIDeploymentStageprod0B67CA26
+            - /GET/
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/Default/GET/ApiPermission.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..
+  QuestionsQuestionsAPIGETApiPermissionTestQuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6GET5A292068:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - QuestionsQuestionsHandler19F957F4
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: QuestionsQuestionsAPI59F42C80
+            - /test-invoke-stage/GET/
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/Default/GET/ApiPermission.Test.QuestionsServiceStackQuestionsQuestionsAPI8E3CCBE6.GET..
+  QuestionsQuestionsAPIGET44D5FA2B:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId:
+        Fn::GetAtt:
+          - QuestionsQuestionsAPI59F42C80
+          - RootResourceId
+      RestApiId:
+        Ref: QuestionsQuestionsAPI59F42C80
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        RequestTemplates:
+          application/json: '{ "statusCode": "200" }'
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - QuestionsQuestionsHandler19F957F4
+                  - Arn
+              - /invocations
+    Metadata:
+      aws:cdk:path: QuestionsServiceStack/Questions/Questions-API/Default/GET/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Modules: aws-cdk=1.58.0,@aws-cdk/assets=1.58.0,@aws-cdk/aws-apigateway=1.58.0,@aws-cdk/aws-applicationautoscaling=1.58.0,@aws-cdk/aws-autoscaling-common=1.58.0,@aws-cdk/aws-certificatemanager=1.58.0,@aws-cdk/aws-cloudformation=1.58.0,@aws-cdk/aws-cloudwatch=1.58.0,@aws-cdk/aws-codeguruprofiler=1.58.0,@aws-cdk/aws-dynamodb=1.58.0,@aws-cdk/aws-ec2=1.58.0,@aws-cdk/aws-efs=1.58.0,@aws-cdk/aws-elasticloadbalancingv2=1.58.0,@aws-cdk/aws-events=1.58.0,@aws-cdk/aws-iam=1.58.0,@aws-cdk/aws-kms=1.58.0,@aws-cdk/aws-lambda=1.58.0,@aws-cdk/aws-logs=1.58.0,@aws-cdk/aws-route53=1.58.0,@aws-cdk/aws-s3=1.58.0,@aws-cdk/aws-s3-assets=1.58.0,@aws-cdk/aws-sns=1.58.0,@aws-cdk/aws-sqs=1.58.0,@aws-cdk/aws-ssm=1.58.0,@aws-cdk/cloud-assembly-schema=1.58.0,@aws-cdk/core=1.58.0,@aws-cdk/custom-resources=1.58.0,@aws-cdk/cx-api=1.58.0,@aws-cdk/region-info=1.58.0,jsii-runtime=DotNet/3.1.6/.NETCoreApp,Version=v3.1/1.0.0.0
+    Condition: CDKMetadataAvailable
+Outputs:
+  QuestionsQuestionsAPIEndpoint1F735D7A:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: QuestionsQuestionsAPI59F42C80
+          - .execute-api.
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: QuestionsQuestionsAPIDeploymentStageprod0B67CA26
+          - /
+Parameters:
+  AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3Bucket1250439A:
+    Type: String
+    Description: S3 bucket for asset "6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4"
+  AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005:
+    Type: String
+    Description: S3 key for asset version "6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4"
+  AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4ArtifactHash8FEC40DA:
+    Type: String
+    Description: Artifact hash for asset "6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4"
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+

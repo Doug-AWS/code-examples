@@ -26,6 +26,8 @@ namespace QuestionsService
                 Runtime = Runtime.DOTNET_CORE_3_1,
                 Code = Code.FromAsset("src/QuestionsService/Resources"),
                 Handler = "QuestionsService::QuestionsService.QuestionsFunctions::Handler",
+                // assembly::namespace.class::method
+                //         QuestionsService::QuestionsService.QuestionsFunctions::Handler
                 Environment = new Dictionary<string, string>
                 {
                     ["TABLE"] = table.TableName
@@ -49,7 +51,6 @@ namespace QuestionsService
             });
 
             api.Root.AddMethod("GET", getQuestionsIntegration);
-
         }
     }
 }

@@ -171,7 +171,7 @@
                       "aws:cdk:cloudformation:props": {
                         "code": {
                           "s3Bucket": {
-                            "Ref": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3BucketADEAEFC3"
+                            "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3Bucket1250439A"
                           },
                           "s3Key": {
                             "Fn::Join": [
@@ -184,7 +184,7 @@
                                       "Fn::Split": [
                                         "||",
                                         {
-                                          "Ref": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3VersionKey84C99050"
+                                          "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005"
                                         }
                                       ]
                                     }
@@ -197,7 +197,7 @@
                                       "Fn::Split": [
                                         "||",
                                         {
-                                          "Ref": "AssetParameters559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29fS3VersionKey84C99050"
+                                          "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005"
                                         }
                                       ]
                                     }
@@ -499,21 +499,21 @@
             "id": "AssetParameters",
             "path": "QuestionsServiceStack/AssetParameters",
             "children": {
-              "559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f": {
-                "id": "559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f",
-                "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f",
+              "6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4": {
+                "id": "6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4",
+                "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4",
                 "children": {
                   "S3Bucket": {
                     "id": "S3Bucket",
-                    "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/S3Bucket"
+                    "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4/S3Bucket"
                   },
                   "S3VersionKey": {
                     "id": "S3VersionKey",
-                    "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/S3VersionKey"
+                    "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4/S3VersionKey"
                   },
                   "ArtifactHash": {
                     "id": "ArtifactHash",
-                    "path": "QuestionsServiceStack/AssetParameters/559443ecad9a375ec7513039fa4debd192d95ca2cc304c159a093d68ebc8f29f/ArtifactHash"
+                    "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4/ArtifactHash"
                   }
                 }
               }

@@ -57,7 +57,7 @@ namespace DynamoDBCRUD
             return songlist;        
         }
 
-        public static async void AddItemsAsync(bool debug, IAmazonDynamoDB client, string table, Songs songs)
+        public static async Task<bool> AddItemsAsync(bool debug, IAmazonDynamoDB client, string table, Songs songs)
         {
             if (debug)
             {
@@ -79,9 +79,11 @@ namespace DynamoDBCRUD
 
                 await theTable.PutItemAsync(item);
             }
+
+            return true;
         }
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             bool debug = false;
             string table = "Music";
@@ -117,7 +119,7 @@ namespace DynamoDBCRUD
 
             DebugPrint(debug, "Got " + songs.NewSongs.Count.ToString() + " songs from " + fileName);
 
-            AddItemsAsync(debug, client, table, songs);
+            var done = await AddItemsAsync(debug, client, table, songs);
 
             Console.WriteLine("Done");
         }

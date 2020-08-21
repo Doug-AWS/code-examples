@@ -51,6 +51,9 @@ Determine the type of primary key you want:
 - Partition key and sort key.
   In this case, you need not have a unique partition key,
   however, the combination of partition key and sort key must be unique.
+  The table we create in these code examples will contain information about songs,
+  so the partition key will be a hash of the artist's name,
+  and the sort key will be a string containing the title of the song.
   
 Consider creating seconday indices.
 These give you additional flexibility when querying the table.
@@ -72,6 +75,7 @@ These code examples use the following NuGet packages:
 All of the following sections contain a static method to implement the stated objective.
 To reduce the amount of code in each section,
 each uses the following template.
+*NOTE*: anything in ALL CAPS (API, RESOURCE) is a placeholder.
 
 ```
 using System;
@@ -81,12 +85,12 @@ using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
-namespace DotNetCoreConsoleTemplate
+namespace DynamoDBCRUD
 {
     class Program
     {
         // Static method goes here
-        /* static async Task<APIResponse> DoSomethingAsync(IAmazonDynamoDB client, string RESOURCE)
+        /* static async Task<APIResponse> DoSomethingAsync(IAmazonDynamoDB client, string RESOURCE, ...)
            {
                var response = await client.APIAsync(...
                ...
@@ -95,18 +99,30 @@ namespace DotNetCoreConsoleTemplate
            }
         */
 
-       static void Main(string[] args)
+        static void Main(string[] args)
         {
-            string RESOURCE = "";
+            string table = "";
+            string artist = "";
+            string title = "";            
 
             int i = 0;
             while (i < args.Length)
             {
                 switch (args[i])
                 {
-                    case "-R":
+                    case "-t":
                         i++;
-                        RESOURCE = args[i];
+                        table = args[i];
+                        break;
+
+                    case "-a":
+                        i++;
+                        artist = args[i];
+                        break;
+
+                    case "-s":
+                        i++;
+                        title = args[i];
                         break;
 
                     default:
@@ -116,9 +132,16 @@ namespace DotNetCoreConsoleTemplate
                 i++;
             }
 
+            if ((table == "") || (artist == "") || (title == ""))
+            {
+                Console.Writeline("You must supply a table name (-t TABLE), artist name (-a ARTIST), and song title (-s TITLE)");
+                return;
+            }                
+
             IAmazonDynamoDB client = new AmazonDynamoDBClient();
 
-            Task<APIResponse> response = DoSomethingAsync(client, RESOURCE);
+            Task<APIResponse> response = DoSomethingAsync(client, RESOURCE, ...);
+        }
     }
 }
 ```
@@ -134,6 +157,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 using Moq;
 
@@ -151,7 +175,6 @@ namespace DotNetCoreConsoleTemplate
         private IAmazonDynamodDB CreateMockDynamoDBClient()
         {
             var mockDynamoDBClient = new Mock<IAmazonDynamoDB>();
-
              
             mockDynamoDBClient.Setup(client => client.PutTableAsync(It.IsAny<PutTableRequest>(), It.IsAny<CancellationToken>()))
                 .Callback<PutTableRequest, CancellationToken>((request, token) =>
@@ -160,8 +183,6 @@ namespace DotNetCoreConsoleTemplate
                     {
                         Assert.AreEqual(tableName, request.TableName);
                     }
-
-                   
                 })
                 .Returns((PutTableRequest r, CancellationToken token) =>
                 {
@@ -171,20 +192,31 @@ namespace DotNetCoreConsoleTemplate
             return mockDynamoDBClient.Object;
         }
 
-        private static IAmazonDynamodDB client;
-
         [TestMethod]
         public async Task CheckCreateTable()
         {
-            client = CreateMockDynamoDBClient();
+            IAmazonDynamodDB client = CreateMockDynamoDBClient();
 
             var result = await CreateTable.MakeTable(client, tableName);
+            // log result
+            /*Microsoft.VisualStudio.TestTools.UnitTesting.Logging.*/Logger.LogMessage("Created table {0}, tableName);
         }
     }
 }
 ```
 
 ## Creating a table
+
+```
+public static async Task<PutTableResponse> MakeTable(IAmazonDynamoDB client, string table)
+{
+    using (client)
+    {
+        var response = await client.PutTableAsync(TableName: table);
+        return response;
+    }
+}
+```
 
 ## Getting information about a table
 

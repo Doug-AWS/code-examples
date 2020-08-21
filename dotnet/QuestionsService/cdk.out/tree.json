@@ -52,6 +52,10 @@
                   }
                 }
               },
+              "mybucket": {
+                "id": "mybucket",
+                "path": "QuestionsServiceStack/Questions/mybucket"
+              },
               "QuestionsHandler": {
                 "id": "QuestionsHandler",
                 "path": "QuestionsServiceStack/Questions/QuestionsHandler",
@@ -149,20 +153,6 @@
                       }
                     }
                   },
-                  "Code": {
-                    "id": "Code",
-                    "path": "QuestionsServiceStack/Questions/QuestionsHandler/Code",
-                    "children": {
-                      "Stage": {
-                        "id": "Stage",
-                        "path": "QuestionsServiceStack/Questions/QuestionsHandler/Code/Stage"
-                      },
-                      "AssetBucket": {
-                        "id": "AssetBucket",
-                        "path": "QuestionsServiceStack/Questions/QuestionsHandler/Code/AssetBucket"
-                      }
-                    }
-                  },
                   "Resource": {
                     "id": "Resource",
                     "path": "QuestionsServiceStack/Questions/QuestionsHandler/Resource",
@@ -170,44 +160,10 @@
                       "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
                       "aws:cdk:cloudformation:props": {
                         "code": {
-                          "s3Bucket": {
-                            "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3Bucket1250439A"
-                          },
-                          "s3Key": {
-                            "Fn::Join": [
-                              "",
-                              [
-                                {
-                                  "Fn::Select": [
-                                    0,
-                                    {
-                                      "Fn::Split": [
-                                        "||",
-                                        {
-                                          "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Fn::Select": [
-                                    1,
-                                    {
-                                      "Fn::Split": [
-                                        "||",
-                                        {
-                                          "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            ]
-                          }
+                          "s3Bucket": "dougs-groovy-s3-bucket",
+                          "s3Key": "QuestionsFunction.zip"
                         },
-                        "handler": "QuestionsService::QuestionsService.QuestionsFunctions::Handler",
+                        "handler": "QuestionsFunction::QuestionsFunction.Function::FunctionHandler",
                         "role": {
                           "Fn::GetAtt": [
                             "QuestionsQuestionsHandlerServiceRole376A1CC0",
@@ -490,30 +446,6 @@
                         }
                       }
                     }
-                  }
-                }
-              }
-            }
-          },
-          "AssetParameters": {
-            "id": "AssetParameters",
-            "path": "QuestionsServiceStack/AssetParameters",
-            "children": {
-              "6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4": {
-                "id": "6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4",
-                "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4",
-                "children": {
-                  "S3Bucket": {
-                    "id": "S3Bucket",
-                    "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4/S3Bucket"
-                  },
-                  "S3VersionKey": {
-                    "id": "S3VersionKey",
-                    "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4/S3VersionKey"
-                  },
-                  "ArtifactHash": {
-                    "id": "ArtifactHash",
-                    "path": "QuestionsServiceStack/AssetParameters/6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4/ArtifactHash"
                   }
                 }
               }

@@ -21,13 +21,13 @@ namespace QuestionsService
                 TableName = "QuestionsTable",
             });
 
+            IBucket mybucket = Bucket.FromBucketName(this, "mybucket", "dougs-groovy-s3-bucket");
+            
             var handler = new Function(this, "QuestionsHandler", new FunctionProps
             {
                 Runtime = Runtime.DOTNET_CORE_3_1,
-                Code = Code.FromAsset("src/QuestionsService/Resources"),
-                Handler = "QuestionsService::QuestionsService.QuestionsFunctions::Handler",
-                // assembly::namespace.class::method
-                //         QuestionsService::QuestionsService.QuestionsFunctions::Handler
+                Code = Code.FromBucket(mybucket, "QuestionsFunction.zip"),
+                Handler = "QuestionsFunction::QuestionsFunction.Function::FunctionHandler",                
                 Environment = new Dictionary<string, string>
                 {
                     ["TABLE"] = table.TableName

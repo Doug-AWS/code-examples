@@ -110,44 +110,10 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "S3Bucket": {
-            "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3Bucket1250439A"
-          },
-          "S3Key": {
-            "Fn::Join": [
-              "",
-              [
-                {
-                  "Fn::Select": [
-                    0,
-                    {
-                      "Fn::Split": [
-                        "||",
-                        {
-                          "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Fn::Select": [
-                    1,
-                    {
-                      "Fn::Split": [
-                        "||",
-                        {
-                          "Ref": "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ]
-          }
+          "S3Bucket": "dougs-groovy-s3-bucket",
+          "S3Key": "QuestionsFunction.zip"
         },
-        "Handler": "QuestionsService::QuestionsService.QuestionsFunctions::Handler",
+        "Handler": "QuestionsFunction::QuestionsFunction.Function::FunctionHandler",
         "Role": {
           "Fn::GetAtt": [
             "QuestionsQuestionsHandlerServiceRole376A1CC0",
@@ -168,9 +134,7 @@
         "QuestionsQuestionsHandlerServiceRole376A1CC0"
       ],
       "Metadata": {
-        "aws:cdk:path": "QuestionsServiceStack/Questions/QuestionsHandler/Resource",
-        "aws:asset:path": "asset.6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4",
-        "aws:asset:property": "Code"
+        "aws:cdk:path": "QuestionsServiceStack/Questions/QuestionsHandler/Resource"
       }
     },
     "QuestionsQuestionsAPI59F42C80": {
@@ -424,20 +388,6 @@
           ]
         ]
       }
-    }
-  },
-  "Parameters": {
-    "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3Bucket1250439A": {
-      "Type": "String",
-      "Description": "S3 bucket for asset \"6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4\""
-    },
-    "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4S3VersionKey8B134005": {
-      "Type": "String",
-      "Description": "S3 key for asset version \"6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4\""
-    },
-    "AssetParameters6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4ArtifactHash8FEC40DA": {
-      "Type": "String",
-      "Description": "Artifact hash for asset \"6374dd186da39629e9b036cc2277cbe0ff5149111760f98dabf5456074d25ad4\""
     }
   }
 }

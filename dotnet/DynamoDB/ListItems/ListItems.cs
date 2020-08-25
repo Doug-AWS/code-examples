@@ -37,7 +37,7 @@ namespace DynamoDBCRUD
             Console.WriteLine(" -h prints this message and quits");
         }
 
-        static async Task<ScanResponse> GetItemsAsync(bool debug, IAmazonDynamoDB client, string table)
+        static async Task<ScanResponse> GetItemsAsync(IAmazonDynamoDB client, string table)
         {
             var response = await client.ScanAsync(new ScanRequest {
                 TableName = table
@@ -92,7 +92,7 @@ namespace DynamoDBCRUD
             var newRegion = RegionEndpoint.GetBySystemName(region);
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
-            var response = GetItemsAsync(debug, client, table);
+            var response = GetItemsAsync(client, table);
 
             Console.WriteLine("Found " + response.Result.Items.Count.ToString() + " items in table " + table + " in region " + region + ":\n");
 

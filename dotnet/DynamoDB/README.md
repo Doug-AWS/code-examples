@@ -133,6 +133,9 @@ The three sets of data are in:
 - *orders.csv*, which defines 12 orders
 - *products.csv*, which defines six products
 
+All of the projects that require a table name use the default table
+**CustomersOrdersProducts**.
+
 ## General code pattern
 
 It's important that you understand the new asynch/await programming model in the
@@ -289,33 +292,31 @@ where *REGION* is the name of a region, such as **us-east-1**.
 
 ## Creating a table
 
-Use the **CreateTable** project to create a table.
-By default this project creates the table **CustomersOrdersProducts**,
-with a partition key, **ID**.
+Use the **CreateTable** project to create a table
+with the partition key, **ID**.
 
 ## Listing the items in a table
 
 Use the **ListItems** project to list the items in a table.
-By default this project lists the items in the table **CustomersOrdersProducts**.
 
 ## Adding an item to the table
 
 Use the **AddItem** project to add an item to a table.
-Again, by default this project adds an item to the table **CustomersOrdersProducts**.
 
 ## Uploading items to a table
 
 The **AddItems** project incorportes data from three comma-separated value (CSV) files to populate a table.
-Much other projects, it adds the items to the table **CustomersOrdersProducts**.
 
 ## Reading data from a table
 
 You can read data from an Amazon DynamoDB table using a number of techniques.
 
 - By the item's primary key
-- By searching for a particular item or items based on some criteria
+- By searchng for a particular item or items based on the value of one or more keys
 
 ### Reading an item using its primary key
+
+Use the 
 
 ### Querying a table
 

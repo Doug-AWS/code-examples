@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Amazon;
@@ -34,7 +33,7 @@ namespace DynamoDBCRUD
             var response = await client.QueryAsync(new QueryRequest
             {
                 TableName = table,
-                KeyConditionExpression = "Id = :v_Id",
+                KeyConditionExpression = "ID = :v_Id",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     { ":v_Id", new AttributeValue
@@ -45,28 +44,7 @@ namespace DynamoDBCRUD
 
             return response;
         }
-
-        private static void PrintItem(
-            Dictionary<string, AttributeValue> attributeList)
-        {
-            foreach (KeyValuePair<string, AttributeValue> kvp in attributeList)
-            {
-                string attributeName = kvp.Key;
-                AttributeValue value = kvp.Value;
-
-                Console.WriteLine(
-                    attributeName + " " +
-                    (value.S == null ? "" : "S=[" + value.S + "]") +
-                    (value.N == null ? "" : "N=[" + value.N + "]") +
-                    (value.SS == null ? "" : "SS=[" + string.Join(",", value.SS.ToArray()) + "]") +
-                    (value.NS == null ? "" : "NS=[" + string.Join(",", value.NS.ToArray()) + "]")
-                    );
-            }
-
-            Console.WriteLine("");
-        }
-
-
+                
         static void Main(string[] args)
         {
             bool debug = false;
@@ -116,11 +94,22 @@ namespace DynamoDBCRUD
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
             Task<QueryResponse> response =  GetItemAsync(client, table, id);
-
-            foreach (Dictionary<string, AttributeValue> item in response.Result.Items)
+                        
+            foreach (var item in response.Result.Items)
             {
-                // Process the result.
-                PrintItem(item);
+                foreach (string attr in item.Keys)
+                {
+                    if (item[attr].S != null)
+                    {
+                        Console.WriteLine(attr + ": " + item[attr].S);
+                    }
+                    else if (item[attr].N != null)
+                    {
+                        Console.WriteLine(attr + ": " + item[attr].N.ToString());
+                    }
+                }
+
+                Console.WriteLine("");
             }
         }
     }

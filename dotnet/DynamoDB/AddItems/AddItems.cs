@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
@@ -11,18 +12,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Newtonsoft.Json;
 
 namespace DynamoDBCRUD
-{
-    public class Song
-    {
-        public string Artist { get; set; }
-        public string SongTitle { get; set; }
-    }
-
-    public class Songs
-    {
-        public List<Song> NewSongs { get; set; }
-    }
-
+{    
     class AddItems
     {
         static void DebugPrint(bool debug, string s)
@@ -32,63 +22,91 @@ namespace DynamoDBCRUD
                 Console.WriteLine(s);
             }
         }
-        static async Task<Document> AddItemAsync(bool debug, IAmazonDynamoDB client, string table, string artist, string title)
+                
+        public static async Task<int> AddFromCSVAsync(bool debug, IAmazonDynamoDB client, string table, string filename, int index)
         {
-            var theTable = Table.LoadTable(client, table);
-            var item = new Document();
+            string line;
+            Table theTable = Table.LoadTable(client, table);
+            Document item = new Document();
 
-            item["Artist"] = artist;
-            item["SongTitle"] = title;
+            // filename is the name of the csv file that contains customer data
+            // in lines 2...N
+            // Column1,...,ColumnN
+            // Read the file and display it line by line.  
+            System.IO.StreamReader file =
+                new System.IO.StreamReader(filename);
 
-            var response = await theTable.PutItemAsync(item);
+            // Get column names from the first line
+            string [] headers = file.ReadLine().Split(",");
+            int numcolumns = headers.Length;
 
-            return response;
-        }
-        static Songs GetItems(bool debug, string fileName)
-        {
-            string jsonString = File.ReadAllText(fileName);
+            int lineNum = 2;
 
-            DebugPrint(debug, "Got JSON:");
-            DebugPrint(debug, jsonString);
-            DebugPrint(debug, "");
-
-            var songlist = JsonConvert.DeserializeObject<Songs>(jsonString);
-
-            return songlist;        
-        }
-
-        public static async Task<bool> AddItemsAsync(bool debug, IAmazonDynamoDB client, string table, Songs songs)
-        {
-            if (debug)
+            while ((line = file.ReadLine()) != null)
             {
-                Console.WriteLine("New songs:");
+                // Split line into columns
+                string[] parts = line.Split(',');
 
-                foreach (Song song in songs.NewSongs)
-                {
-                    Console.WriteLine("\"" + song.SongTitle + "\" from \"" + song.Artist + "\"");
+                // if we don't have the right number of parts, something's wrong
+                if (parts.Length != numcolumns)
+                {                    
+                    Console.WriteLine("Did not have " + numcolumns.ToString() + " columns in line " + lineNum.ToString() + " of file " + filename);
+                    return 0;
                 }
-            }
 
-            var theTable = Table.LoadTable(client, table);
-            var item = new Document();
+                item["ID"] = index.ToString();
 
-            foreach (Song song in songs.NewSongs)
-            {
-                item["Artist"] = song.Artist;
-                item["SongTitle"] = song.SongTitle;
+                DebugPrint(debug, "Adding item with index " + index.ToString() + " to table");
+
+                index++;
+
+                for (int i = 0; i < numcolumns; i++)
+                {
+                    // if the header contains the word "date", store the value as a long (number)
+                    if (headers[i].ToLower().Contains("date"))
+                    {
+                        // The datetime format is:
+                        // YYYY-MM-DD HH:MM:SS
+                        DateTime MyDateTime = DateTime.ParseExact(parts[i], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+                        TimeSpan timeSpan = MyDateTime - new DateTime(1970, 1, 1, 0, 0, 0);
+
+                        item[headers[i]] = (long)timeSpan.TotalSeconds;
+                    }
+                    else
+                    {
+                        // If it's a number, store it as such
+                        try
+                        {
+                            int v = int.Parse(parts[i]);
+                            item[headers[i]] = v;
+                        }
+                        catch
+                        {
+                            item[headers[i]] = parts[i];
+                        }
+                    }
+                }
 
                 await theTable.PutItemAsync(item);
+
+                lineNum++;
             }
 
-            return true;
+            file.Close();
+
+            return index;
         }
 
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
+            int index = 0;
             bool debug = false;
-            string table = "Music";
+            string table = "";
             string region = "us-west-2";
-            string fileName = "";
+            string customers = "";
+            string orders = "";
+            string products = "";
 
             int i = 0;
 
@@ -96,12 +114,28 @@ namespace DynamoDBCRUD
             {
                 switch (args[i])
                 {
+                    case "-c":
+                        i++;
+                        customers = args[i];
+                        break;
                     case "-d":
                         debug = true;
                         break;
-                    case "-f":
+                    case "-o":
                         i++;
-                        fileName = args[i];
+                        orders = args[i];
+                        break;
+                    case "-p":
+                        i++;
+                        products = args[i];
+                        break;
+                    case "-r":
+                        i++;
+                        region = args[i];
+                        break;
+                    case "-t":
+                        i++;
+                        table = args[i];
                         break;
                     default:
                         break;
@@ -110,16 +144,46 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            DebugPrint(debug, "Adding songs from " + fileName);
+            if ((region == "") || (table == "") || (customers == "") || (orders == "") || (products == ""))
+            {
+                Console.WriteLine("You must include a non-empty region (-r REGION), and customers (-c CUSTOMERS-FILE.csv), orders (-o ORDERS-FILE.csv), and products (-p PRODUCTS-FILE.csv) files");
+                return;
+            }
 
             var newRegion = RegionEndpoint.GetBySystemName(region);
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
-            Songs songs = GetItems(debug, fileName);
+            DebugPrint(debug, "Adding customers from " + customers);
+            Task<int> result = AddFromCSVAsync(debug, client, table, customers, index);
 
-            DebugPrint(debug, "Got " + songs.NewSongs.Count.ToString() + " songs from " + fileName);
+            index = result.Result;
 
-            var done = await AddItemsAsync(debug, client, table, songs);
+            if (index == 0)
+            {
+                return;
+            }
+
+            DebugPrint(debug, "Adding orders from " + orders);
+
+            result = AddFromCSVAsync(debug, client, table, orders, index);
+
+            index = result.Result;
+
+            if (index == 0)
+            {
+                return;
+            }
+
+            DebugPrint(debug, "Adding products from " + products);
+
+            result = AddFromCSVAsync(debug, client, table, products, index);
+
+            index = result.Result;
+
+            if (index == 0)
+            {
+                return;
+            }
 
             Console.WriteLine("Done");
         }

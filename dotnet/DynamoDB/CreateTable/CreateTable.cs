@@ -43,12 +43,7 @@ namespace DynamoDBCRUD
                 {
                     new AttributeDefinition
                     {
-                        AttributeName = "Artist",
-                        AttributeType = "S"
-                    },
-                    new AttributeDefinition
-                    {
-                        AttributeName = "SongTitle",
+                        AttributeName = "ID",
                         AttributeType = "S"
                     }
                 },
@@ -56,14 +51,9 @@ namespace DynamoDBCRUD
                 {
                     new KeySchemaElement
                     {
-                        AttributeName = "Artist",
+                        AttributeName = "ID",
                         KeyType = "HASH"
-                    },
-                    new KeySchemaElement
-                    {
-                        AttributeName = "SongTitle",
-                        KeyType = "RANGE"
-                    },
+                    }
                 },
                 ProvisionedThroughput = new ProvisionedThroughput
                 {
@@ -103,7 +93,7 @@ namespace DynamoDBCRUD
             Console.WriteLine("Usage:");
             Console.WriteLine("CreateTable.exe [-t TABLE] [-r REGION] [-h]");
             Console.WriteLine("");
-            Console.WriteLine(" TABLE is optional, and defaults to Music");
+            Console.WriteLine(" TABLE is optional, and defaults to CustomersOrdersProducts");
             Console.WriteLine(" REGION is optional, and defaults to us-west-2");
             Console.WriteLine(" -h prints this message and quits");
         }
@@ -112,7 +102,7 @@ namespace DynamoDBCRUD
         {
             bool debug = false;
             string region = "us-west-2";
-            string table = "Music";
+            string table = "CustomersOrdersProducts";
 
             int i = 0;
             while (i < args.Length)

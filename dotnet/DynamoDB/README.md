@@ -20,6 +20,43 @@ topic for details.
 
 ## Before you write any code
 
+Read the
+[Best Practices for Modeling Relational Data in DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-relational-modeling.html)
+topic in the Amazon DynamoDB Developer Guide for information about moving from a relational database to Amazon DynamoDB.
+
+**IMPORTANT**
+
+NoSQL design requires a different mindset than RDBMS design. 
+For an RDBMS, you can create a normalized data model without thinking about access patterns. 
+You can then extend it later when new questions and query requirements arise. 
+By contrast, in Amazon DynamoDB, 
+you shouldn't start designing your schema until you know the questions that it needs to answer. 
+Understanding the business problems and the application use cases up front is absolutely essential.
+
+### A simple example
+
+Let's take a simple order entry system,
+with just three tables: Customers, Orders, and Products.
+- Customer data includes a unique ID, their name, address, email address.
+- Orders data includes a unique ID, customer ID, product ID, order date, and status.
+- Products data includes a unique ID, description, quantity, and cost.
+
+You might end up with access patterns including the following:
+
+- Get all orders for all customers within a given date range
+- Get all orders of a given product for all customers
+- Get all products below a given quantity
+
+In a relational database, these might be satisfied by the following SQL queries:
+
+```
+select * from Orders where Order_Date between '2020-05-04 05:00:00' and '2020-08-13 09:00:00'
+select * from Orders where Order_Product = 'a1b2c3'
+select * from Products where Product_Quantity < '100'
+```
+
+## Modeling data in Amazon DynamoDB
+
 Amazon DynamoDB supports the following data types,
 so you might have to create a new data model:
 
@@ -47,20 +84,53 @@ Determine the type of primary key you want:
 
 - Partition key, which is a unique identifier for the item in the table.
   If you use a partition key, every key must be unique.
+  The table we create in these code examples will contain 
+  a partition key that uniquely identifies a record,
+  which can be a customer, an order, or a product.
+
+  Therefore, we'll create some global seconday indices
+  to query the table.
   
 - Partition key and sort key.
   In this case, you need not have a unique partition key,
   however, the combination of partition key and sort key must be unique.
-  The table we create in these code examples will contain information about songs,
-  so the partition key will be a hash of the artist's name,
-  and the sort key will be a string containing the title of the song.
-  
-Consider creating seconday indices.
-These give you additional flexibility when querying the table.
-Remember, Amazon DynamoDB does not use SQL.
 
 We'll show you how to create all of these when you create a table,
 and how to use them when you access a table.
+
+## Modeling Customers, Orders, and Products in Amazon DynamoDB
+
+Your Amazon DynamoDB schema to model these tables might look like:
+
+| Key | Data Type | Description |
+| --- | --- | ---
+| Customer_ID | String | The unique ID of a customer
+| Customer_Name | String | The name of the customer
+| Customer_Address | String | The address of the customer
+| Customer_Email | String | The email address of the customer
+| Order_ID | String | The unique ID of an order
+| Order_Customer | String | The Customer_ID of a customer
+| Order_Product | String | The Product_ID of a product
+| Order_Date | Date | When the order was made
+| Order_Status | String | The status (open, in delivery, etc.) of the order
+| Product_ID | String | The unique ID of a product
+| Product_Description | String | The description of the product
+| Product_Quantity | Number | How many are in the warehouse
+| Product_Cost | Number | The cost, in cents, of one product
+
+## Creating the example databases
+
+We'll use three CSV (comma-separated value) files to define a set of customers,
+orders, and products.
+Then we'll load that data into a relational database and Amazon DynamoDB.
+Finally, we'll run some SQL commands against the relational database,
+and show you the corresponding queries or scan against Amazon DynamoDB.
+
+The three sets of data are in:
+
+- *customers.csv*, which defines six customers
+- *orders.csv*, which defines 12 orders
+- *products.csv*, which defines six products
 
 ## General code pattern
 
@@ -69,8 +139,8 @@ It's important that you understand the new asynch/await programming model in the
 
 These code examples use the following NuGet packages:
 
-- AWSSDK.Core, v3.5.0-beta
-- AWSSDK,DynamoDBv2, v3.5.0-beta
+- AWSSDK.Core, v3.5.0
+- AWSSDK,DynamoDBv2, v3.5.0
 
 All of the following sections contain a static method to implement the stated objective.
 To reduce the amount of code in each section,
@@ -89,21 +159,20 @@ namespace DynamoDBCRUD
 {
     class Program
     {
-        // Static method goes here
-        /* static async Task<APIResponse> DoSomethingAsync(IAmazonDynamoDB client, string RESOURCE, ...)
-           {
-               var response = await client.APIAsync(...
-               ...
-               return response;
+        // Use the interface to facilitate unit testing    
+        static async Task<APIResponse> DOSOMETHINGAsync(IAmazonDynamoDB client, string RESOURCE, ...)
+        {
+            var response = await client.APIAsync(...
+            ...
+	       
+            return response;
 
-           }
-        */
+        }
 
         static void Main(string[] args)
         {
             string table = "";
-            string artist = "";
-            string title = "";            
+            string RESOURCE = "";
 
             int i = 0;
             while (i < args.Length)
@@ -115,14 +184,9 @@ namespace DynamoDBCRUD
                         table = args[i];
                         break;
 
-                    case "-a":
+                    case "-R":
                         i++;
-                        artist = args[i];
-                        break;
-
-                    case "-s":
-                        i++;
-                        title = args[i];
+                        RESOURCE = args[i];
                         break;
 
                     default:
@@ -132,15 +196,15 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            if ((table == "") || (artist == "") || (title == ""))
+            if ((table == "") || (RESOURCE == ""))
             {
-                Console.Writeline("You must supply a table name (-t TABLE), artist name (-a ARTIST), and song title (-s TITLE)");
+                Console.Writeline("You must supply a table name (-t TABLE) and RESOURCE (-r RESOURCE)");
                 return;
             }                
 
             IAmazonDynamoDB client = new AmazonDynamoDBClient();
 
-            Task<APIResponse> response = DoSomethingAsync(client, RESOURCE, ...);
+            Task<APIResponse> response = DOSOMETHINGAsync(client, RESOURCE, ...);
         }
     }
 }
@@ -150,7 +214,8 @@ namespace DynamoDBCRUD
 
 We use [moq4](https://github.com/moq/moq4) to create unit tests with mocked objects.
 
-A typical unit test looks something like the following:
+A typical unit test looks something like the following,
+which tests a call to **PutTableAsync**:
 
 ```
 using Amazon.DynamoDBv2;
@@ -198,14 +263,15 @@ namespace DotNetCoreConsoleTemplate
             IAmazonDynamodDB client = CreateMockDynamoDBClient();
 
             var result = await CreateTable.MakeTable(client, tableName);
-            // log result
-            /*Microsoft.VisualStudio.TestTools.UnitTesting.Logging.*/Logger.LogMessage("Created table {0}, tableName);
+            Logger.LogMessage("Created table {0}, tableName);
         }
     }
 }
 ```
 
 ## Creating a table
+
+The only required argument to **PutTableAsync** is the name of the table.
 
 ```
 public static async Task<PutTableResponse> MakeTable(IAmazonDynamoDB client, string table)
@@ -221,6 +287,12 @@ public static async Task<PutTableResponse> MakeTable(IAmazonDynamoDB client, str
 ## Getting information about a table
 
 ## Writing data to a table
+
+For this step we will create the data for our table from our three CSV files.
+Since the schema for each CSV file is different, 
+we'll create three slightly different methods to incorporate that data into Amazon DynamoDB.
+
+
 
 ## Reading data from a table
 

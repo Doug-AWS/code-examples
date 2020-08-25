@@ -13,6 +13,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using System.Diagnostics;
+using System.Text;
 
 namespace DynamoDBCRUD
 {
@@ -31,7 +32,7 @@ namespace DynamoDBCRUD
             Console.WriteLine("Usage:");
             Console.WriteLine("ListItems.exe [-t TABLE] [-r REGION] [-h]");
             Console.WriteLine("");
-            Console.WriteLine(" TABLE is optional, and defaults to Music");
+            Console.WriteLine(" TABLE is optional, and defaults to CustomersOrdersProducts");
             Console.WriteLine(" REGION is optional, and defaults to us-west-2");
             Console.WriteLine(" -h prints this message and quits");
         }
@@ -49,7 +50,7 @@ namespace DynamoDBCRUD
         {
             bool debug = false;
             string region = "us-west-2";
-            string table = "Music";
+            string table = "CustomersOrdersProducts";
             
 
             int i = 0;
@@ -93,26 +94,27 @@ namespace DynamoDBCRUD
 
             var response = GetItemsAsync(debug, client, table);
 
-            Console.WriteLine("Found " + response.Result.Items.Count.ToString() + " items in table " + table + " in region " + region + ":");
+            Console.WriteLine("Found " + response.Result.Items.Count.ToString() + " items in table " + table + " in region " + region + ":\n");
 
-            string artist = "";
-            string title = "";
+            StringBuilder output;
 
             foreach(var item in response.Result.Items)
             {
+                output = new StringBuilder();
+
                 foreach(string attr in item.Keys)
                 {
-                    if (attr == "Artist")
+                    if (item[attr].S != null)
                     {
-                        artist = item[attr].S;
+                        output.Append(attr + ": " + item[attr].S + ", ");
                     }
-                    else
+                    else if(item[attr].N != null)
                     {
-                        title = item[attr].S;
+                        output.Append(attr + ": " + item[attr].N.ToString() + ", ");
                     }
                 }
 
-                Console.WriteLine("Artist: \"" + artist + "\" Song title: \"" + title + "\"");
+                Console.WriteLine(output.ToString());
             }
         }
     }

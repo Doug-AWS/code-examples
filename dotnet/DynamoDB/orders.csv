@@ -1,0 +1,13 @@
+Order_ID,Order_Customer,Order_Product,Order_Date,Order_Status
+1,1,6,2020-07-04 12:00:00,pending
+2,2,5,2020-01-01 12:00:00,delivering
+3,3,4,2020-02-14 12:00:00,delivered
+4,4,3,2020-04-01 12:00:00,backordered
+5,5,2,2020-01-11 12:00:00,pending
+6,6,1,2020-03-14 12:00:00,delivered
+7,1,1,2019-12-24 12:00:00,delivered
+8,2,3,2019-01-01 12:00:00,backordered
+9,3,5,2019-11-04 12:00:00,delivered
+10,4,2,2020-08-13 12:00:00,pending
+11,5,4,2020-05-11 12:00:00,delivered
+12,6,6,2020-07-04 12:00:00,delivered

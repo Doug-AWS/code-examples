@@ -316,15 +316,28 @@ You can read data from an Amazon DynamoDB table using a number of techniques.
 
 ### Reading an item using its primary key
 
-Use the 
-
-### Querying a table
+Use the **GetItem** project 
+to retrieve information about the customer, order, or product with the given primary key.
 
 ### Scanning a table
 
+Use the **ScanTable** project to get the products
+with fewer than a given number of items available for sale.
+
 ## Managing indexes
 
+Global secondary indices give you the ability to treat a set of Amazon DynamoDB table
+keys as if they were a separate table.
+
 ### Creating an index
+
+Use the **CreateIndex** project to create an index.
+It takes the following values:
+
+- -i INDEX-NAME, where INDEX-NAME is the name of the index
+- -m MAIN-KEY, where MAIN-KEY is the partition key of the index
+- -s SECONDARY-KEY, where SECONDARY-KEY is the sort key of the index
+- -p PROJECTIONS, where PROJECTIONS are the keys (and their values) returned by a query
 
 ### Querying an index
 

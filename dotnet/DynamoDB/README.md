@@ -104,16 +104,17 @@ Your Amazon DynamoDB schema to model these tables might look like:
 
 | Key | Data Type | Description |
 | --- | --- | ---
-| Customer_ID | String | The unique ID of a customer
+| ID | Number | The unique ID of the item
+| Customer_ID | Number | The unique ID of a customer
 | Customer_Name | String | The name of the customer
 | Customer_Address | String | The address of the customer
 | Customer_Email | String | The email address of the customer
-| Order_ID | String | The unique ID of an order
-| Order_Customer | String | The Customer_ID of a customer
-| Order_Product | String | The Product_ID of a product
-| Order_Date | Date | When the order was made
+| Order_ID | Number | The unique ID of an order
+| Order_Customer | Number | The Customer_ID of a customer
+| Order_Product | Number | The Product_ID of a product
+| Order_Date | Number | When the order was made
 | Order_Status | String | The status (open, in delivery, etc.) of the order
-| Product_ID | String | The unique ID of a product
+| Product_ID | Number | The unique ID of a product
 | Product_Description | String | The description of the product
 | Product_Quantity | Number | How many are in the warehouse
 | Product_Cost | Number | The cost, in cents, of one product
@@ -171,6 +172,7 @@ namespace DynamoDBCRUD
 
         static void Main(string[] args)
         {
+            string region = "us-west-2";        
             string table = "";
             string RESOURCE = "";
 
@@ -182,6 +184,11 @@ namespace DynamoDBCRUD
                     case "-t":
                         i++;
                         table = args[i];
+                        break;
+
+                    case "-r":
+                        i++;
+                        region = args[i];
                         break;
 
                     case "-R":
@@ -202,7 +209,8 @@ namespace DynamoDBCRUD
                 return;
             }                
 
-            IAmazonDynamoDB client = new AmazonDynamoDBClient();
+            var newRegion = RegionEndpoint.GetBySystemName(region);
+            IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
             Task<APIResponse> response = DOSOMETHINGAsync(client, RESOURCE, ...);
         }
@@ -269,32 +277,43 @@ namespace DotNetCoreConsoleTemplate
 }
 ```
 
+## Listing all of the tables in a region
+
+Use the **ListTables** project to list all of the tables in a region.
+By default it lists the tables in **us-west-2**,
+but you can change that using:
+
+```-r REGION```
+
+where *REGION* is the name of a region, such as **us-east-1**.
+
 ## Creating a table
 
-The only required argument to **PutTableAsync** is the name of the table.
+Use the **CreateTable** project to create a table.
+By default this project creates the table **CustomersOrdersProducts**,
+with a partition key, **ID**.
 
-```
-public static async Task<PutTableResponse> MakeTable(IAmazonDynamoDB client, string table)
-{
-    using (client)
-    {
-        var response = await client.PutTableAsync(TableName: table);
-        return response;
-    }
-}
-```
+## Listing the items in a table
 
-## Getting information about a table
+Use the **ListItems** project to list the items in a table.
+By default this project lists the items in the table **CustomersOrdersProducts**.
 
-## Writing data to a table
+## Adding an item to the table
 
-For this step we will create the data for our table from our three CSV files.
-Since the schema for each CSV file is different, 
-we'll create three slightly different methods to incorporate that data into Amazon DynamoDB.
+Use the **AddItem** project to add an item to a table.
+Again, by default this project adds an item to the table **CustomersOrdersProducts**.
 
+## Uploading items to a table
 
+The **AddItems** project incorportes data from three comma-separated value (CSV) files to populate a table.
+Much other projects, it adds the items to the table **CustomersOrdersProducts**.
 
 ## Reading data from a table
+
+You can read data from an Amazon DynamoDB table using a number of techniques.
+
+- By the item's primary key
+- By searching for a particular item or items based on some criteria
 
 ### Reading an item using its primary key
 

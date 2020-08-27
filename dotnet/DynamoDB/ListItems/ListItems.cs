@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Threading;
+using System.Configuration;
+using System.Text;
 using System.Threading.Tasks;
-
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Amazon;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using System.Diagnostics;
-using System.Text;
 
 namespace DynamoDBCRUD
 {
@@ -25,15 +17,15 @@ namespace DynamoDBCRUD
             {
                 Console.WriteLine(s);
             }
-        }        
+        }
+
+        
 
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("ListItems.exe [-t TABLE] [-r REGION] [-h]");
+            Console.WriteLine("ListItems.exe [-r REGION] [-t TABLE] [-h]");
             Console.WriteLine("");
-            Console.WriteLine(" TABLE is optional, and defaults to CustomersOrdersProducts");
-            Console.WriteLine(" REGION is optional, and defaults to us-west-2");
             Console.WriteLine(" -h prints this message and quits");
         }
 
@@ -44,14 +36,34 @@ namespace DynamoDBCRUD
             });
 
             return response;
-        }
+        }        
 
         static void Main(string[] args)
         {
             bool debug = false;
-            string region = "us-west-2";
-            string table = "CustomersOrdersProducts";
-            
+            var configfile = "../../../../Config/app.config";
+            var region = "";
+            var table = "";
+
+            // Get default region and table from config file
+            var efm = new ExeConfigurationFileMap
+            {
+                ExeConfigFilename = configfile
+            };
+
+            Configuration configuration = ConfigurationManager.OpenMappedExeConfiguration(efm, ConfigurationUserLevel.None);
+
+            if (configuration.HasFile)
+            {
+                AppSettingsSection appSettings = configuration.AppSettings;
+                region = appSettings.Settings["Region"].Value;
+                table = appSettings.Settings["Table"].Value;
+            }
+            else
+            {
+                Console.WriteLine("Could not find " + configfile);
+                return;
+            }
 
             int i = 0;
             while (i < args.Length)
@@ -79,15 +91,34 @@ namespace DynamoDBCRUD
                 i++;
             }
 
+            var empty = false;
+            var sb = new StringBuilder("You must supply a non-empty ");
+
             if (table == "")
             {
-                Console.WriteLine("You must supply a non-empty table name (-t TABLE)");
-                return;
+                empty = true;
+                sb.Append("table name (-t TABLE), ");
+            }
+            else
+            {
+                DebugPrint(debug, "Table: " + table + "\n");
             }
 
-            DebugPrint(debug, "Debugging enabled\n");
+            if (region == "")
+            {
+                empty = true;
+                sb.Append("region -r (REGION)");
+            }
+            else
+            {
+                DebugPrint(debug, "Region: " + region);
+            }
 
-            DebugPrint(debug, "Table  == " + table + "\n");
+            if (empty)
+            {
+                Console.WriteLine(sb.ToString());
+                return;
+            }
 
             var newRegion = RegionEndpoint.GetBySystemName(region);
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);

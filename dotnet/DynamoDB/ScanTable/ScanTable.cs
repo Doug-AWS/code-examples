@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Text;
 using System.Threading.Tasks;
 
 using Amazon;
@@ -21,11 +23,11 @@ namespace DynamoDBCRUD
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("ScanTable.exe ITEM-ID [-t TABLE] [-r REGION] [-h]");
+            Console.WriteLine("ScanTable.exe -m MINIMUM-QUANTITY [-d] [-h]");
             Console.WriteLine("");
-            Console.WriteLine(" TABLE is optional, and defaults to CustomersOrdersProducts");
-            Console.WriteLine(" REGION is optional, and defaults to us-west-2");
+            Console.WriteLine("  MINIMUM-QUANTITY is required, and must be > 0");
             Console.WriteLine(" -h prints this message and quits");
+            Console.WriteLine(" -d prints extra (debugging) info");
         }
 
         static async Task<ScanResponse> ScanItemsAsync(IAmazonDynamoDB client, string table, string volume)
@@ -45,9 +47,10 @@ namespace DynamoDBCRUD
 
         static void Main(string[] args)
         {
-            bool debug = false;
-            string region = "us-west-2";
-            string table = "CustomersOrdersProducts";
+            var debug = false;
+            var configfile = "../../../../Config/app.config";
+            var region = "";
+            var table = "";
             string minimum = "";
 
             int i = 0;
@@ -65,14 +68,6 @@ namespace DynamoDBCRUD
                         i++;
                         minimum = args[i];
                         break;
-                    case "-r":
-                        i++;
-                        region = args[i];
-                        break;
-                    case "-t":
-                        i++;
-                        table = args[i];
-                        break;
                     default:
                         break;
                 }
@@ -80,9 +75,9 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            if ((table == "") || (minimum == "") || (region == ""))
+            if (minimum == "")
             {
-                Console.WriteLine("You must supply a non-empty table name (-t TABLE) and region (-r REGIoN), and minimum quantity (-m NUMBER)");
+                Console.WriteLine("You must supply a non-empty minimum quantity (-m MINIMUM-QUANTITY, ");            
                 return;
             }
 
@@ -91,10 +86,42 @@ namespace DynamoDBCRUD
             try
             {
                 number = int.Parse(minimum);
+
+                if (number < 1)
+                {
+                    Console.WriteLine("The minimum quantity must be > 0");
+                    return;
+                }
             }
             catch (FormatException)
             {
                 Console.WriteLine(minimum + " is not an integer");
+                return;
+            }
+
+            // Get default region and table from config file
+            var efm = new ExeConfigurationFileMap
+            {
+                ExeConfigFilename = configfile
+            };
+
+            Configuration configuration = ConfigurationManager.OpenMappedExeConfiguration(efm, ConfigurationUserLevel.None);
+
+            if (configuration.HasFile)
+            {
+                AppSettingsSection appSettings = configuration.AppSettings;
+                region = appSettings.Settings["Region"].Value;
+                table = appSettings.Settings["Table"].Value;
+
+                if ((region == "") || (table == ""))
+                {
+                    Console.WriteLine("You must specify Region and Table values in " + configfile);
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not find " + configfile);
                 return;
             }
 

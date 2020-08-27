@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Threading.Tasks;
 
 using Amazon;
@@ -21,11 +22,10 @@ namespace DynamoDBCRUD
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("GetItem.exe ITEM-ID [-t TABLE] [-r REGION] [-h]");
+            Console.WriteLine("GetItem.exe ITEM-ID [-d] [-h]");
             Console.WriteLine("");
-            Console.WriteLine(" TABLE is optional, and defaults to CustomersOrdersProducts");
-            Console.WriteLine(" REGION is optional, and defaults to us-west-2");
-            Console.WriteLine(" -h prints this message and quits");
+            Console.WriteLine("  -h prints this message and quits");
+            Console.WriteLine("  -d prints extra (debugging) info");
         }
 
         static async Task<QueryResponse> GetItemAsync(IAmazonDynamoDB client, string table, string id)
@@ -36,8 +36,11 @@ namespace DynamoDBCRUD
                 KeyConditionExpression = "ID = :v_Id",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    { ":v_Id", new AttributeValue
-                    { S = id }
+                    {
+                        ":v_Id", new AttributeValue
+                        {
+                            S = id 
+                        }
                     }
                 }
             });
@@ -47,10 +50,11 @@ namespace DynamoDBCRUD
                 
         static void Main(string[] args)
         {
-            bool debug = false;
-            string region = "us-west-2";
-            string table = "CustomersOrdersProducts";
-            string id = "";
+            var debug = false;
+            var configfile = "../../../../Config/app.config";
+            var region = "";
+            var table = "";
+            var id = "";
 
             int i = 0;
             while (i < args.Length)
@@ -67,14 +71,6 @@ namespace DynamoDBCRUD
                         i++;
                         id = args[i];
                         break;
-                    case "-r":
-                        i++;
-                        region = args[i];
-                        break;
-                    case "-t":
-                        i++;
-                        table = args[i];
-                        break;
                     default:
                         break;
                 }
@@ -82,9 +78,29 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            if ((table == "") || (id == "") || (region == ""))
+            // Get default region and table from config file
+            var efm = new ExeConfigurationFileMap
             {
-                Console.WriteLine("You must supply a non-empty table name (-t TABLE), item (-i ITEM), and region (-r REGIoN)");
+                ExeConfigFilename = configfile
+            };
+
+            Configuration configuration = ConfigurationManager.OpenMappedExeConfiguration(efm, ConfigurationUserLevel.None);
+
+            if (configuration.HasFile)
+            {
+                AppSettingsSection appSettings = configuration.AppSettings;
+                region = appSettings.Settings["Region"].Value;
+                table = appSettings.Settings["Table"].Value;
+
+                if ((region == "") || (table == ""))
+                {
+                    Console.WriteLine("You must specify Region and Table values in " + configfile);
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not find " + configfile);
                 return;
             }
 

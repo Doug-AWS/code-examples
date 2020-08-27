@@ -1,0 +1,4 @@
+Order_ID,Order_Customer,Order_Product,Order_Date,Order_Status
+1,1,6,"2020-07-04 12:00:00",pending
+11,5,4,"2020-05-11 12:00:00",delivered
+12,6,6,"2020-07-04 12:00:00",delivered

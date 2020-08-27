@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,7 +35,7 @@ namespace DynamoDBCRUD
             return false;
         }
 
-        static async Task<CreateTableResponse> MakeTableAsync(bool debug, IAmazonDynamoDB client, string table)
+        static async Task<CreateTableResponse> MakeTableAsync(IAmazonDynamoDB client, string table)
         {
             var response = await client.CreateTableAsync(new CreateTableRequest
             {
@@ -45,6 +46,11 @@ namespace DynamoDBCRUD
                     {
                         AttributeName = "ID",
                         AttributeType = "S"
+                    },
+                    new AttributeDefinition
+                    {
+                        AttributeName = "Area",
+                        AttributeType = "S"
                     }
                 },
                 KeySchema = new List<KeySchemaElement>
@@ -53,6 +59,11 @@ namespace DynamoDBCRUD
                     {
                         AttributeName = "ID",
                         KeyType = "HASH"
+                    },
+                    new KeySchemaElement
+                    {
+                        AttributeName = "Area",
+                        KeyType = "RANGE"
                     }
                 },
                 ProvisionedThroughput = new ProvisionedThroughput
@@ -60,13 +71,7 @@ namespace DynamoDBCRUD
                     ReadCapacityUnits = 10,
                     WriteCapacityUnits = 5
                 }
-            });
-
-            if (debug)
-            {
-                Console.WriteLine("CreateTable response:");
-                Console.WriteLine(response);
-            }
+            });            
 
             // Wait for table to be created
             bool ready = false;
@@ -91,18 +96,18 @@ namespace DynamoDBCRUD
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("CreateTable.exe [-t TABLE] [-r REGION] [-h]");
+            Console.WriteLine("CreateTable.exe [-h] [-d]");
             Console.WriteLine("");
-            Console.WriteLine(" TABLE is optional, and defaults to CustomersOrdersProducts");
-            Console.WriteLine(" REGION is optional, and defaults to us-west-2");
-            Console.WriteLine(" -h prints this message and quits");
+            Console.WriteLine("  -h prints this message and quits");
+            Console.WriteLine("  -d prints additional (debugging) info");
         }
 
         static void Main(string[] args)
         {
-            bool debug = false;
-            string region = "us-west-2";
-            string table = "CustomersOrdersProducts";
+            var debug = false;
+            var configfile = "../../../../Config/app.config";
+            var region = "";
+            var table = "";
 
             int i = 0;
             while (i < args.Length)
@@ -115,14 +120,6 @@ namespace DynamoDBCRUD
                     case "-d":
                         debug = true;
                         break;
-                    case "-r":
-                        i++;
-                        region = args[i];
-                        break;
-                    case "-t":
-                        i++;
-                        table = args[i];
-                        break;
                     default:
                         break;
                 }
@@ -130,15 +127,33 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            if (table == "")
+            // Get default region and table from config file
+            var efm = new ExeConfigurationFileMap
             {
-                Console.WriteLine("You must supply a non-empty table name (-t TABLE)");
+                ExeConfigFilename = configfile
+            };
+
+            Configuration configuration = ConfigurationManager.OpenMappedExeConfiguration(efm, ConfigurationUserLevel.None);
+
+            if (configuration.HasFile)
+            {
+                AppSettingsSection appSettings = configuration.AppSettings;
+                region = appSettings.Settings["Region"].Value;
+                table = appSettings.Settings["Table"].Value;
+
+                if ((region == "") || (table == ""))
+                {
+                    Console.WriteLine("You must specify Region and Table values in " + configfile);
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not find " + configfile);
                 return;
             }
 
-            DebugPrint(debug, "Debugging enabled\n");
-
-            DebugPrint(debug, "Table  == " + table + "\n");
+            DebugPrint(debug, "Debugging enabled\n");            
 
             var newRegion = RegionEndpoint.GetBySystemName(region);
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
@@ -151,7 +166,7 @@ namespace DynamoDBCRUD
                 return;
             }
 
-            Task<CreateTableResponse> response = MakeTableAsync(debug, client, table);
+            Task<CreateTableResponse> response = MakeTableAsync(client, table);
 
             Console.WriteLine("Created table " + response.Result.TableDescription.TableName + " in region " + region);
         }

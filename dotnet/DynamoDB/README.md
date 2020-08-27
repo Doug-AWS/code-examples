@@ -51,8 +51,25 @@ In a relational database, these might be satisfied by the following SQL queries:
 
 ```
 select * from Orders where Order_Date between '2020-05-04 05:00:00' and '2020-08-13 09:00:00'
-select * from Orders where Order_Product = 'a1b2c3'
+select * from Orders where Order_Product = '3'
 select * from Products where Product_Quantity < '100'
+```
+
+Given the data in *customers.csv*, *orders.csv*, and *products.csv*,
+these queries return (as CSV):
+
+```
+Order_ID,Order_Customer,Order_Product,Order_Date,Order_Status
+1,1,6,"2020-07-04 12:00:00",pending
+11,5,4,"2020-05-11 12:00:00",delivered
+12,6,6,"2020-07-04 12:00:00",delivered
+
+Order_ID,Order_Customer,Order_Product,Order_Date,Order_Status
+4,4,3,"2020-04-01 12:00:00",backordered
+8,2,3,"2019-01-01 12:00:00",backordered
+
+Product_ID,Product_Description,Product_Quantity,Product_Cost
+4,"2'x50' plastic sheeting",45,450
 ```
 
 ## Modeling data in Amazon DynamoDB
@@ -104,7 +121,8 @@ Your Amazon DynamoDB schema to model these tables might look like:
 
 | Key | Data Type | Description |
 | --- | --- | ---
-| ID | Number | The unique ID of the item
+| ID | String | The unique ID of the item
+| Type | String | Customer, Order, or Product
 | Customer_ID | Number | The unique ID of a customer
 | Customer_Name | String | The name of the customer
 | Customer_Address | String | The address of the customer
@@ -332,16 +350,45 @@ keys as if they were a separate table.
 ### Creating an index
 
 Use the **CreateIndex** project to create an index.
-It takes the following values:
+It requires the following command-line options:
 
 - -i INDEX-NAME, where INDEX-NAME is the name of the index
 - -m MAIN-KEY, where MAIN-KEY is the partition key of the index
 - -s SECONDARY-KEY, where SECONDARY-KEY is the sort key of the index
 - -p PROJECTIONS, where PROJECTIONS are the keys (and their values) returned by a query
 
-### Querying an index
+You can override the following values:
+
+- -r REGION, which is us-west-2 by default
+- -t TABLE, which is CustomersOrdersProducts by default
+
+To create a global secondary index (GSI) for customers, orders, and products,
+execute the following commands, 
+where the **-m** flag defines the main (partition key) value 
+and the **-s** flag defines the secondary (sort key) value:
+
+```
+CreateIndex.exe -i Customers -m Customer_ID -s Customer_Email"
+CreateIndex.exe -i Orders    -m Order_ID    -s Order_Date"
+CreateIndex.exe -i Products  -m Product_ID  -s Product_Quantity"
+```
 
 ### Scanning an index
+
+Now that we have a GSI for customers, orders, and products,
+let's modify the **ScanTable** project to:
+
+- Get all orders for all customers within a given date range
+- Get all orders of a given product for all customers
+- Get all products below a given quantity
+
+#### Getting all orders for all customers within a given date range
+
+#### Getting all orders of a given product for all customers
+
+#### Getting all products below a give quantity
+
+This is the default behavior of the existing **ScanTable** project code.
 
 ## Modifying data in a table
 

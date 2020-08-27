@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Configuration;
 using System.Globalization;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
-using Amazon.DynamoDBv2.Model;
 
 namespace DynamoDBCRUD
 {
@@ -22,7 +19,7 @@ namespace DynamoDBCRUD
             }
         }
 
-        static async Task<bool> AddItemAsync(bool debug, IAmazonDynamoDB client, string table, string keystring, string valuestring)
+        static async Task<bool> AddItemAsync(IAmazonDynamoDB client, string table, string keystring, string valuestring)
         {
             // Get individual keys and values
             string[] keys = keystring.Split(",");
@@ -73,22 +70,47 @@ namespace DynamoDBCRUD
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("AddItem.exe -k KEYS -v VALUES [-t TABLE] [-r REGION] [-h]");
+            Console.WriteLine("AddItem.exe -k KEYS -v VALUES [-h]");
             Console.WriteLine("");
             Console.WriteLine("Both KEYS and VALUES are required");
             Console.WriteLine("Both should be a comma-separated list, and must have the same number of values");
-            Console.WriteLine(" TABLE is optional, and defaults to CustomersOrdersProducts");
-            Console.WriteLine(" REGION is optional, and defaults to us-west-2");
             Console.WriteLine(" -h prints this message and quits");
         }
 
         static void Main(string[] args)
         {
-            bool debug = false;
-            string region = "us-west-2";
-            string table = "CustomersOrdersProducts";
-            string keys = "";
-            string values = "";
+            var debug = false;
+            var configfile = "../../../../Config/app.config";
+            var region = "";
+            var table = "";
+            var keys = "";
+            var values = "";            
+
+            // Get default region and table from config file
+            var efm = new ExeConfigurationFileMap
+            {
+                ExeConfigFilename = configfile
+            };
+
+            Configuration configuration = ConfigurationManager.OpenMappedExeConfiguration(efm, ConfigurationUserLevel.None);
+
+            if (configuration.HasFile)
+            {
+                AppSettingsSection appSettings = configuration.AppSettings;
+                region = appSettings.Settings["Region"].Value;
+                table = appSettings.Settings["Table"].Value;
+
+                if ((region == "") || (table == ""))
+                {
+                    Console.WriteLine("You must specify a Region and Table value in " + configfile);
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not find " + configfile);
+                return;
+            }
 
             int i = 0;
             while (i < args.Length)
@@ -101,10 +123,6 @@ namespace DynamoDBCRUD
                     case "-d":
                         debug = true;
                         break;
-                    case "-r":
-                        i++;
-                        region = args[i];
-                        break;
                     case "-k":
                         i++;
                         keys = args[i];
@@ -113,10 +131,6 @@ namespace DynamoDBCRUD
                         i++;
                         values = args[i];
                         break;
-                    case "-t":
-                        i++;
-                        table = args[i];
-                        break;
                     default:
                         break;
                 }
@@ -124,20 +138,18 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            if ((table == "") || (keys == "") || (values == ""))
+            if ((keys == "") || (values == ""))
             {
-                Console.WriteLine("You must supply a non-empty table name (-t TABLE), comma-separate list of keys (-k KEYS) and comma-separated list of values (-v VALUES)");
+                Console.WriteLine("You must supply a comma-separate list of keys (-k KEYS) and a comma-separated list of values (-v VALUES)");
                 return;
             }
 
             DebugPrint(debug, "Debugging enabled\n");
 
-            DebugPrint(debug, "Table  == " + table + "\n");
-
             var newRegion = RegionEndpoint.GetBySystemName(region);
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
-           Task<bool> response = AddItemAsync(debug, client, table, keys, values);
+           Task<bool> response = AddItemAsync(client, table, keys, values);
 
             Console.WriteLine("Added item to " + table + " in region " + region);
         }

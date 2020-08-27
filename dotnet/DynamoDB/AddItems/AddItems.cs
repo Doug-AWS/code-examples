@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Configuration;
 using System.Globalization;
-using System.IO;
-using System.Net.NetworkInformation;
+using System.Text;
 using System.Threading.Tasks;
 
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
-
-using Newtonsoft.Json;
 
 namespace DynamoDBCRUD
 {    
@@ -22,25 +19,40 @@ namespace DynamoDBCRUD
                 Console.WriteLine(s);
             }
         }
-                
+
+        static void Usage()
+        {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("AddItems.exe [-d] [-h]");
+            Console.WriteLine("");
+            Console.WriteLine("  -d prints extra (debugging) info");
+            Console.WriteLine("  -h prints this message and quits");
+        }
+
         public static async Task<int> AddFromCSVAsync(bool debug, IAmazonDynamoDB client, string table, string filename, int index)
         {
-            string line;
-            Table theTable = Table.LoadTable(client, table);
-            Document item = new Document();
+            DebugPrint(debug, "Loading data from file " + filename + " into table " + table);
+
+            var theTable = Table.LoadTable(client, table);
+            var item = new Document();
 
             // filename is the name of the csv file that contains customer data
-            // in lines 2...N
             // Column1,...,ColumnN
+            // in lines 2...N
             // Read the file and display it line by line.  
             System.IO.StreamReader file =
                 new System.IO.StreamReader(filename);
 
             // Get column names from the first line
-            string [] headers = file.ReadLine().Split(",");
+            string firstline = file.ReadLine();
+            DebugPrint(debug, "Columns:");
+            DebugPrint(debug, firstline);
+
+            string [] headers = firstline.Split(",");
             int numcolumns = headers.Length;
 
-            int lineNum = 2;
+            var lineNum = 2;
+            string line;
 
             while ((line = file.ReadLine()) != null)
             {
@@ -72,6 +84,7 @@ namespace DynamoDBCRUD
                         TimeSpan timeSpan = MyDateTime - new DateTime(1970, 1, 1, 0, 0, 0);
 
                         item[headers[i]] = (long)timeSpan.TotalSeconds;
+                        DebugPrint(debug, "Adding date " + parts[i] + " for column " + headers[i] + " to table");
                     }
                     else
                     {
@@ -80,10 +93,12 @@ namespace DynamoDBCRUD
                         {
                             int v = int.Parse(parts[i]);
                             item[headers[i]] = v;
+                            DebugPrint(debug, "Adding number " + parts[i] + " for column " + headers[i] + " to table");
                         }
                         catch
                         {
                             item[headers[i]] = parts[i];
+                            DebugPrint(debug, "Adding string " + parts[i] + " for column " + headers[i] + " to table");
                         }
                     }
                 }
@@ -95,15 +110,17 @@ namespace DynamoDBCRUD
 
             file.Close();
 
+            DebugPrint(debug, "Parsed " + lineNum.ToString() + " lines from source file");
+
             return index;
         }
 
         static void Main(string[] args)
         {
-            int index = 0;
             bool debug = false;
-            string table = "";
-            string region = "us-west-2";
+            var configfile = "../../../../Config/app.config";
+            var region = "";
+            var table = "";
             string customers = "";
             string orders = "";
             string products = "";
@@ -114,29 +131,12 @@ namespace DynamoDBCRUD
             {
                 switch (args[i])
                 {
-                    case "-c":
-                        i++;
-                        customers = args[i];
-                        break;
                     case "-d":
                         debug = true;
                         break;
-                    case "-o":
-                        i++;
-                        orders = args[i];
-                        break;
-                    case "-p":
-                        i++;
-                        products = args[i];
-                        break;
-                    case "-r":
-                        i++;
-                        region = args[i];
-                        break;
-                    case "-t":
-                        i++;
-                        table = args[i];
-                        break;
+                   case "-h":
+                        Usage();
+                        return;
                     default:
                         break;
                 }
@@ -144,9 +144,32 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            if ((region == "") || (table == "") || (customers == "") || (orders == "") || (products == ""))
+            // Get default region and table from config file
+            var efm = new ExeConfigurationFileMap
             {
-                Console.WriteLine("You must include a non-empty region (-r REGION), and customers (-c CUSTOMERS-FILE.csv), orders (-o ORDERS-FILE.csv), and products (-p PRODUCTS-FILE.csv) files");
+                ExeConfigFilename = configfile
+            };
+
+            Configuration configuration = ConfigurationManager.OpenMappedExeConfiguration(efm, ConfigurationUserLevel.None);
+
+            if (configuration.HasFile)
+            {
+                AppSettingsSection appSettings = configuration.AppSettings;
+                region = appSettings.Settings["Region"].Value;
+                table = appSettings.Settings["Table"].Value;
+                customers = appSettings.Settings["Customers"].Value;
+                orders = appSettings.Settings["Orders"].Value;
+                products = appSettings.Settings["Products"].Value;
+
+                if ((region == "") || (table == "") || (customers == "") || (orders == "") || (products == ""))
+                {
+                    Console.WriteLine("You must specify Region, Table, Customers, Orders, and Products values in " + configfile);
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not find " + configfile);
                 return;
             }
 
@@ -154,6 +177,8 @@ namespace DynamoDBCRUD
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
             DebugPrint(debug, "Adding customers from " + customers);
+            var index = 0;
+
             Task<int> result = AddFromCSVAsync(debug, client, table, customers, index);
 
             index = result.Result;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,26 +21,51 @@ namespace DynamoDBCRUD
             }
         }
 
-        static async Task<ListTablesResponse> ShowTablesAsync(bool debug, IAmazonDynamoDB client)
+        static async Task<ListTablesResponse> ShowTablesAsync(IAmazonDynamoDB client)
         {
             var response = await client.ListTablesAsync(new ListTablesRequest { });
 
             return response;
         }
 
+        
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("ListTables.exe [-r REGION] [-h]");
+            Console.WriteLine("ListTables.exe [-h]");
             Console.WriteLine("");
-            Console.WriteLine(" REGION is optional, and defaults to us-west-2");
             Console.WriteLine(" -h prints this message and quits");
         }
 
         static void Main(string[] args)
         {
-            bool debug = false;
-            string region = "us-west-2";
+            var debug = false;
+            var region = "";
+            var configfile = "../../../../Config/app.config";
+
+            // Get default region from config file
+            var efm = new ExeConfigurationFileMap {
+                ExeConfigFilename = configfile 
+            };
+            
+            Configuration configuration = ConfigurationManager.OpenMappedExeConfiguration(efm, ConfigurationUserLevel.None);
+            
+            if (configuration.HasFile)
+            {
+                AppSettingsSection appSettings = configuration.AppSettings;
+                region = appSettings.Settings["Region"].Value;
+
+                if (region == "")
+                {
+                    Console.WriteLine("You must set a Region value in " + configfile);
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not find " + configfile);
+                return;
+            }
 
             int i = 0;
             while (i < args.Length)
@@ -52,10 +78,6 @@ namespace DynamoDBCRUD
                     case "-d":
                         debug = true;
                         break;
-                    case "-r":
-                        i++;
-                        region = args[i];
-                        break;
                     default:
                         break;
                 }
@@ -63,13 +85,12 @@ namespace DynamoDBCRUD
                 i++;
             }
 
-            DebugPrint(debug, "Debugging enabled\n");
+            DebugPrint(debug, "Debugging enabled");
 
             var newRegion = RegionEndpoint.GetBySystemName(region);
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
-
-            Task<ListTablesResponse> response = ShowTablesAsync(debug, client);
+            Task<ListTablesResponse> response = ShowTablesAsync(client);
 
             Console.WriteLine("Found " + response.Result.TableNames.Count.ToString() + " tables in " + region + " region:");
 

@@ -1,0 +1,6 @@
+<configuration>
+ <appSettings>
+    <add key="Table" value="CustomersOrdersProducts" />
+    <add key="Region" value="us-west-2" />
+ </appSettings>
+</configuration>

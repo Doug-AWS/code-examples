@@ -24,7 +24,7 @@ namespace DynamoDBCRUD
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("ListItems.exe [-r REGION] [-t TABLE] [-h]");
+            Console.WriteLine("ListItems.exe [-r REGION] [-h]");
             Console.WriteLine("");
             Console.WriteLine(" -h prints this message and quits");
         }
@@ -41,7 +41,7 @@ namespace DynamoDBCRUD
         static void Main(string[] args)
         {
             bool debug = false;
-            var configfile = "../../../../Config/app.config";
+            var configfile = "app.config";
             var region = "";
             var table = "";
 

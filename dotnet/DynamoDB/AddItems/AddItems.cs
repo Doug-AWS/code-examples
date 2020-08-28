@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Configuration;
 using System.Globalization;
-using System.Text;
 using System.Threading.Tasks;
 
 using Amazon;
@@ -118,7 +117,7 @@ namespace DynamoDBCRUD
         static void Main(string[] args)
         {
             bool debug = false;
-            var configfile = "../../../../Config/app.config";
+            var configfile = "app.config";
             var region = "";
             var table = "";
             string customers = "";

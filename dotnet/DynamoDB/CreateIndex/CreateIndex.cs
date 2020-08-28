@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,7 +34,7 @@ namespace CreateIndex
             Console.WriteLine("  -d print some extra (debugging) info");
         }
 
-        static async Task<UpdateTableResponse> AddIndexAsync(bool debug, IAmazonDynamoDB client, string table, string indexname, string partitionkey, string sortkey)
+        static async Task<UpdateTableResponse> AddIndexAsync(bool debug, IAmazonDynamoDB client, string table, string indexname, string partitionkey, string partitionkeytype, string sortkey, string sortkeytype)
         {
             if (null == client)
             {
@@ -107,17 +108,43 @@ namespace CreateIndex
                 update
             };
 
-            AttributeDefinition ad1 = new AttributeDefinition
-            {
-                AttributeName = partitionkey,
-                AttributeType = "S"
-            };
+            AttributeDefinition ad1;
 
-            AttributeDefinition ad2 = new AttributeDefinition
+            if (partitionkeytype == "string")
             {
-                AttributeName = sortkey,
-                AttributeType = "S"
-            };
+                ad1 = new AttributeDefinition
+                {
+                    AttributeName = partitionkey,
+                    AttributeType = "S"
+                };
+            }
+            else
+            {
+                ad1 = new AttributeDefinition
+                {
+                    AttributeName = partitionkey,
+                    AttributeType = "N"
+                };
+            }
+
+            AttributeDefinition ad2;
+
+            if (sortkeytype == "string")
+            {
+                ad2 = new AttributeDefinition
+                {
+                    AttributeName = sortkey,
+                    AttributeType = "S"
+                };
+            }
+            else
+            {
+                ad2 = new AttributeDefinition
+                {
+                    AttributeName = sortkey,
+                    AttributeType = "N"
+                };
+            }
 
             UpdateTableRequest request = new UpdateTableRequest
             {
@@ -144,12 +171,14 @@ namespace CreateIndex
         static void Main(string[] args)
         {
             var debug = false;
-            var configfile = "../../../../Config/app.config";
+            var configfile = "app.config";
             var region = "";
             var table = "";
             var indexname = "";
             var mainkey = "";
-            string secondarykey = "";
+            var mainkeytype = "";
+            var secondarykey = "";
+            var secondarykeytype = "";
 
             int i = 0;
             while (i < args.Length)
@@ -170,9 +199,17 @@ namespace CreateIndex
                         i++;
                         mainkey = args[i];
                         break;
+                    case "-k":
+                        i++;
+                        mainkeytype = args[i];
+                        break;
                     case "-s":
                         i++;
                         secondarykey = args[i];
+                        break;
+                    case "-t":
+                        i++;
+                        secondarykeytype = args[i];
                         break;
                     default:
                         break;
@@ -204,6 +241,12 @@ namespace CreateIndex
                 DebugPrint(debug, "Main key: " + mainkey);
             }
 
+            if (mainkeytype == "")
+            {
+                empty = true;
+                sb.Append("main key type (-k TYPE), ");
+            }
+
             if (secondarykey == "")
             {
                 empty = true;
@@ -214,9 +257,28 @@ namespace CreateIndex
                 DebugPrint(debug, "Secondary key: " + secondarykey);
             }
 
+
+            if (secondarykeytype == "")
+            {
+                empty = true;
+                sb.Append("secondary key type (-t TYPE), ");
+            }
+
             if (empty)
             {
                 Console.WriteLine(sb.ToString());
+                return;
+            }
+
+            if ((mainkeytype != "string") && (mainkeytype != "number"))
+            {
+                Console.WriteLine("The main key type must be string or number");
+                return;
+            }
+
+            if ((secondarykeytype != "string") && (secondarykeytype != "number"))
+            {
+                Console.WriteLine("The secondary key type must be string or number");
                 return;
             }
 
@@ -251,7 +313,7 @@ namespace CreateIndex
             var newRegion = RegionEndpoint.GetBySystemName(region);
             IAmazonDynamoDB client = new AmazonDynamoDBClient(newRegion);
 
-            Task<UpdateTableResponse> response = AddIndexAsync(debug, client, table, indexname, mainkey, secondarykey);
+            Task<UpdateTableResponse> response = AddIndexAsync(debug, client, table, indexname, mainkey, mainkeytype, secondarykey, secondarykeytype);
 
             Console.WriteLine("Task status: " + response.Status);
             Console.WriteLine("Result status: " + response.Result.HttpStatusCode);

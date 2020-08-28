@@ -22,7 +22,7 @@ namespace DynamoDBCRUD
         static void Usage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("GetItem.exe ITEM-ID [-d] [-h]");
+            Console.WriteLine("GetItem.exe -i ITEM-ID [-d] [-h]");
             Console.WriteLine("");
             Console.WriteLine("  -h prints this message and quits");
             Console.WriteLine("  -d prints extra (debugging) info");
@@ -51,7 +51,7 @@ namespace DynamoDBCRUD
         static void Main(string[] args)
         {
             var debug = false;
-            var configfile = "../../../../Config/app.config";
+            var configfile = "app.config";
             var region = "";
             var table = "";
             var id = "";
@@ -76,6 +76,12 @@ namespace DynamoDBCRUD
                 }
 
                 i++;
+            }
+
+            if (id == "")
+            {
+                Console.WriteLine("You must supply an item ID (-i ID)");
+                return;
             }
 
             // Get default region and table from config file

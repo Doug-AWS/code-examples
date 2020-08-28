@@ -6,12 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="customers.csv" />
-    <None Remove="orders.csv" />
-    <None Remove="products.csv" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AWSSDK.Core" Version="3.5.0" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.0" />
     <PackageReference Include="Json.NET" Version="1.0.23" />

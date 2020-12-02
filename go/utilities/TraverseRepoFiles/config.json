@@ -8,5 +8,5 @@
   "OutDirComment": "OutDir is the local directory where we place the constructed topic .MD files, based on the .GO source file name",
   "Outdir": "",
   "TranslationComment": "Option to translate source filename -> destination filename; valid values are none (just use existing filename), index (tranlate everything to _index.md), or metadata (use name from metadata.yaml)",
-  "Tranlation": "index"
+  "Translation": "none"
 }

@@ -25,6 +25,7 @@ type Data struct {
 	} `yaml:"files"`
 }
 
+// Global struct to hold metadata for gov2 and gov2/<service> folders
 var files Data
 
 func populateFiles(debug bool, path string) error {
@@ -80,7 +81,8 @@ func isValueLanguage(debug bool, lang string) bool {
 	return false
 }
 
-func isValidGoDir(debug bool, dir string) string {
+// This only works for Go currently
+func getNameForSvcDir(debug bool, dir string) string {
 	switch dir {
 	case "cloudwatch":
 		return "Amazon CloudWatch"
@@ -105,18 +107,18 @@ func isValidGoDir(debug bool, dir string) string {
 	}
 }
 
-func createSvcDir(debug bool, dir string, outDir string, translation string) error {
-	name := isValidGoDir(debug, dir)
+func createSvcDir(debug bool, language string, dir string, outDir string, translation string) error {
+	name := getNameForSvcDir(debug, dir)
 	if name == "" {
-		msg := dir + " is not recognized as a valid language directory"
+		msg := dir + " is not recognized as a valid service directory"
 		return errors.New(msg)
 	}
 
 	outputDir := outDir + "/" + dir
 	outputFile := outputDir + "/"
 
-	// Create directory
-	debugPrint(debug, "Creating language directory "+outputDir)
+	// Create directory for service
+	debugPrint(debug, "Creating service directory "+outputDir)
 	err := os.Mkdir(outDir+"/"+dir, 0755)
 	if err != nil {
 		return err
@@ -124,13 +126,15 @@ func createSvcDir(debug bool, dir string, outDir string, translation string) err
 
 	switch translation {
 	case "index":
+		// Create _index.md files for top-level service topics
 		outputFile += "_index.md"
 		break
 	default:
+		// Otherwise, create <service>_index.md
 		outputFile += dir + "_index.md"
 	}
 
-	// Create file in that directory
+	// Create topic file in that directory
 	f, err := os.Create(outputFile)
 	if err != nil {
 		return err
@@ -138,32 +142,65 @@ func createSvcDir(debug bool, dir string, outDir string, translation string) err
 
 	defer f.Close()
 
-	// Here's what we write to _index.md
-	content := "---\n" +
-		"title: \"" + name + " Examples Using the AWS SDK for Go\"\n" +
-		"linkTitle: \"" + name + " Examples\"\n" +
-		"weight: 3\n" +
-		"---\n" +
-		"\n" +
-		"This section contains code examples for " + name + " using version 2 of the Go SDK.\n"
-
 	w := bufio.NewWriter(f)
+
+	content := ""
+
+	switch translation {
+	case "index":
+		// Here's what we write to [<service>]_index.md
+		content = "---\n" +
+			"title: \"" + name + " Examples Using the AWS SDK for Go\"\n" +
+			"linkTitle: \"" + name + " Examples\"\n" +
+			"weight: 3\n" +
+			"---\n" +
+			"\n" +
+			"# This section contains code examples for " + name + " using version 2 of the Go SDK.\n"
+
+		break
+	default:
+		content = "# This section contains code examples for " + name + " using version 2 of the Go SDK.\n"
+		// Add after updating metadata.yaml with description, operations:
+		//   1. Get all paths that don't end in _test.go -> ## path
+		//   2. Get description for that entry           -> Description
+		break
+	}
+
 	_, err = w.WriteString(content)
 	if err != nil {
 		fmt.Println("Got an error writing to " + outputFile)
 		return err
 	}
 
+	/* If we ever want to add the contents of the README.md file in that folder:
+	filePrefix := "https://raw.githubusercontent.com/awsdocs/aws-doc-sdk-examples/master/"
+	path := filePrefix + language + "/" + dir + "/" + "README.md"
+	results, err := http.Get(path)
+	if err != nil {
+		return err
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(results.Body)
+	text := buf.String()
+
+	_, err = w.WriteString(text)
+	if err != nil {
+		fmt.Println("Got an error writing README.md to " + outputFile)
+		return err
+	}
+	*/
+
 	w.Flush()
 
 	return nil
 }
 
-func createSubDir(debug bool, dir string, subdir string, outDir string) error {
+func createOperationDir(debug bool, dir string, subdir string, outDir string) error {
 	outputDir := outDir + "/" + dir + "/" + subdir
 
 	// Create directory
-	debugPrint(debug, "Creating procedure directory "+outputDir)
+	debugPrint(debug, "Creating operation directory "+outputDir)
 	err := os.Mkdir(outputDir, 0755)
 
 	return err
@@ -354,21 +391,23 @@ func processFiles(debug bool, language string, input string, outDir string, tran
 			}
 
 			if svcDir != parts[1] {
-				err := createSvcDir(debug, parts[1], outDir, translation)
+				if translation == "metadata" {
+					// Read metadata so we can:
+					// * name operation topic files correctly when metadata-based naming scheme is specified
+					// * create list of code examples for service-level topic
+					debugPrint(debug, "Processing "+parts[0]+"/"+parts[1]+"/metadata.yaml")
+					err := populateFiles(debug, parts[0]+"/"+parts[1]+"/metadata.yaml")
+					if err != nil {
+						return err
+					}
+				}
+
+				err := createSvcDir(debug, language, parts[1], outDir, translation)
 				if err != nil {
 					return err
 				}
 
 				svcDir = parts[1]
-			}
-
-			if translation == "metadata" {
-				// Read metadata so we can name output files correctly
-				debugPrint(debug, "Processing "+parts[0]+"/"+parts[1]+"/metadata.yaml")
-				err := populateFiles(debug, parts[0]+"/"+parts[1]+"/metadata.yaml")
-				if err != nil {
-					return err
-				}
 			}
 
 			break
@@ -382,7 +421,7 @@ func processFiles(debug bool, language string, input string, outDir string, tran
 			}
 
 			if subDir != parts[2] {
-				err := createSubDir(debug, svcDir, parts[2], outDir)
+				err := createOperationDir(debug, svcDir, parts[2], outDir)
 				if err != nil {
 					return err
 				}

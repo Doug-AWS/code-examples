@@ -53,7 +53,7 @@ IGNORE_FOLDERS = {
 }
 
 # files to skip
-IGNORE_FILES = {'AssemblyInfo.cs', 'metadata.yaml', '.travis.yml'}
+IGNORE_FILES = {'AssemblyInfo.cs', 'metadata.yaml', '.travis.yml', 'checkin_tests.py'}
 
 # list of words that should never be in code examples
 DENY_LIST = {'alpha-docs-aws.amazon.com', 'integ-docs-aws.amazon.com'}

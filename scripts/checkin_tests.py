@@ -153,7 +153,7 @@ def check_files(root, quiet):
                 error_count += verify_no_secret_keys(filename, file_path)
                 error_count += verify_snippet_start_end(file_contents, file_path)
 
-    print(f"{file_count} files scanned in {root}.")
+    print(f"{file_count} files scanned in {root}.\n")
     return error_count
 
 

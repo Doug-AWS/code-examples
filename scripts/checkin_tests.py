@@ -118,6 +118,10 @@ ALLOW_LIST = {
     'ses/commands/VerifyDomainIdentityCommand',
     'ses/commands/VerifyDomainIdentityCommand',
     'com/amazondynamodb/latest/developerguide',
+    'BlueprintBaseName/test/BlueprintBaseName',
+    'QuestionsServiceStack/Questions/mybucket',
+    'support/hmhgeddbohgjknpmjagkdomcpobmllji',
+    'MyCognitoUserPoolStackmyuserpool5272DE15',
 }
 
 

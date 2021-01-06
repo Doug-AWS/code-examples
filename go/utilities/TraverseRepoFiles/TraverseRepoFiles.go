@@ -519,7 +519,7 @@ func main() {
 	userName := flag.String("u", globalConfig.UserName, "Your GitHub user name")
 	language := flag.String("l", globalConfig.Language, "The language in the GitHub repo")
 	outDir := flag.String("o", globalConfig.OutDir, "Root directory where the output files are created")
-	translation := flag.String("t", globalConfig.Translation, "Whether to translate source filename -> destination filename; valid values are none (just use existing filename), index (tranlate everything to _index.md), or metadata (use name from metadata.yaml)")
+	translation := flag.String("t", globalConfig.Translation, "Whether to translate source filename -> destination filename; valid values are none (just use existing filename), index (default; translate everything to _index.md), or metadata (use name from metadata.yaml)")
 	debug := flag.Bool("d", false, "Whether to barf out more info. False by default.")
 	fakeIt := flag.Bool("f", false, "Whether to just barf out the response")
 	help := flag.Bool("h", false, "Displays usage and quits")

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
 func main() {
@@ -17,9 +18,9 @@ func main() {
 	service := flag.String("s", "", "The service that sends notifications to Lambda")
 	function := flag.String("f", "", "The name of the Lambda function that's called")
 	resource := flag.String("r", "", "The name of the resource that sends a notification to Lambda")
-	// -s service, where s3 -> Principal: "s3.amazonaws.com"
-	// -f function, -> FunctionName: "function"
-	// -r resource, which for "-s s3 -r mybucket" -> SourceArn: "arn:aws:s3:::mybucket" AND
+	// -s SERVICE, so when SERVICE == s3                               -> Principal: "s3.amazonaws.com"
+	// -f FUNCTION                                                     -> FunctionName: "function"
+	// -r RESOURCE, so when SERVICE == "s3" AND RESOURCE == "mybucket" -> SourceArn: "arn:aws:s3:::mybucket"
 
 	flag.Parse()
 
@@ -38,17 +39,29 @@ func main() {
 
 	permArgs := &lambda.AddPermissionInput{}
 
-	/* For the service, this app only supports:
-
-	   DynamoDB (table)
-	   S3 (bucket)
-	   SNS (topic)
-	   SQS (queue)
+	/* For service, this app only supports:
+	    	   DynamoDB (table)
+		       S3 (bucket)
+		       SNS (topic)
+		       SQS (queue)
 	*/
 
 	// Get default region and account ID (to build ARNs):
-	region := ""
-	accountID := ""
+	region := cfg.Region
+
+	stsClient := sts.NewFromConfig(cfg)
+
+	input := &sts.GetCallerIdentityInput{}
+
+	resp, err := stsClient.GetCallerIdentity(context.Background(), input)
+	if err != nil {
+		fmt.Println("Got error snarfing caller identity:")
+		fmt.Println(err.Error())
+		return
+	}
+
+	accountID := *resp.Account
+	stsClient = nil
 
 	switch *service {
 	case "dynamodb":

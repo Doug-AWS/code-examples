@@ -11,19 +11,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	// github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue
-
 	// "github.com/aws/aws-sdk-go-v2/service/dynamodb/expression"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 )
 
-// Item holds info about the new item
+// Item holds info about each item that scan returns
 type Item struct {
 	Year   int
 	Title  string
-	Plot   string
 	Rating float64
 }
 
@@ -63,26 +59,26 @@ func main() {
 	}
 	// Create the expression to fill the input struct.
 	// Get all movies in that year; we'll pull out those with a higher rating later
-	filt := expression.Name("Year").Equal(expression.Value(year))
+	filt := "Year = :val"
 
 	// Or we could get the movies by ratings and pull out those with the right year later
-	//    filt := expression.Name("info.rating").GreaterThan(expression.Value(min_rating))
+	//    "info.rating > :val"
 
 	// Get back the title, year, and rating
-	proj := expression.NamesList(expression.Name("Title"), expression.Name("Year"), expression.Name("Rating"))
+	proj := "Title, Year, Rating"
 
-	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).Build()
-	if err != nil {
-		fmt.Println("Got error building expression:")
-		fmt.Println(err)
-		return
+	// Value for expression
+	av := types.AttributeValue{
+		N: year,
 	}
 
+	valueMap := make(map[string]types.AttributeValue)
+	valueMap[":val"] = av
+
 	input := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		FilterExpression:          expr.Filter(),
-		ProjectionExpression:      expr.Projection(),
+		ExpressionAttributeValues: valueMap,
+		FilterExpression:          &filt,
+		ProjectionExpression:      &proj,
 		TableName:                 table,
 	}
 
@@ -95,30 +91,74 @@ func main() {
 	// Create a new DynamoDB Service Client
 	client := dynamodb.NewFromConfig(cfg)
 
-	result, err := ScanTableItems(context.Background(), client, input)
-	if err != nil {
-		fmt.Println("Got an error scanning table:")
-		fmt.Println(err)
-		return
-	}
-
+	// Dictionary<string, AttributeValue> lastKeyEvaluated = null
+	lastKeyEvaluated := make(map[string]types.AttributeValue)
+	done := false
 	var items []Item
 
-	for _, i := range result.Items {
-		item := Item{}
-
-		err = dynamodbattribute.UnmarshalMap(i, &item)
+	for !done {
+		result, err := ScanTableItems(context.Background(), client, input)
 		if err != nil {
-			fmt.Println("Got error unmarshalling:")
+			fmt.Println("Got an error scanning table:")
 			fmt.Println(err)
 			return
 		}
 
-		// Which ones had a higher rating than the minimum value?
-		if item.Rating > *minRating {
-			// Or it we had filtered by rating previously:
-			//   if item.Year == year {
-			items = append(items, item)
+		lastKeyEvaluated = result.LastEvaluatedKey
+
+		if len(lastKeyEvaluated) == 0 {
+			done = true
+			break
+		}
+
+		// Items is an array of maps of [string]types.AttributeValue
+		gotYear := false
+		gotTitle := false
+		gotRating := false
+
+		for _, item := range result.Items {
+			var i Item
+
+			for key, value := range item {
+				var union types.AttributeValue
+				// type switches can be used to check the union value
+				switch v := union.(type) {
+				case *types.AttributeValueMemberN:
+					if key == "year" {
+						i.Year, err = strconv.Atoi(v.Value)
+						if err != nil {
+							fmt.Println("Got an error converting year " + v.Value + " to an int")
+							return
+						}
+
+						gotYear = true
+					}
+
+					if key == "rating" {
+						f, err := strconv.ParseFloat(v.Value, 64)
+						if err != nil {
+							fmt.Println("Got an error converting rating " + v.Value + " to a float")
+							return
+						}
+
+						i.Rating = f
+
+						gotRating = true
+					}
+
+				case *types.AttributeValueMemberS:
+					if key == "title" {
+						i.Title = v.Value
+						gotTitle = true
+					}
+				}
+			}
+
+			if gotYear && gotTitle && gotRating {
+				if i.Rating > *minRating {
+					items = append(items, i)
+				}
+			}
 		}
 	}
 

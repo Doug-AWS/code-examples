@@ -1,85 +1,58 @@
-// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-Identifier: Apache-2.0
-// snippet-start:[dynamodb.gov2.scan_table_items]
 package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	// github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue
-	// "github.com/aws/aws-sdk-go-v2/service/dynamodb/expression"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+
+	// "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+
+	//"github.com/aws/aws-sdk-go-v2/service/dynamodb/expression"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 )
 
-// Item holds info about each item that scan returns
+// Item holds info about the items returned by Scan
 type Item struct {
 	Year   int
 	Title  string
 	Rating float64
 }
 
-// DynamodbScanAPI defines the interface for the Scan function.
-// We use this interface to test the function using a mocked service.
-type DynamodbScanAPI interface {
-	Scan(ctx context.Context,
-		params *dynamodb.ScanInput,
-		optFns ...func(*dynamodb.Options)) (*dynamodb.ScanOutput, error)
-}
-
-// ScanTableItems retrieves the Amazon Dynamodb table items that match the input parameters.
-// Inputs:
-//     c is the context of the method call, which includes the AWS Region.
-//     api is the interface that defines the method call.
-//     input defines the input arguments to the service call.
-// Output:
-//     If successful, a ScanOutput object containing the result of the service call and nil.
-//     Otherwise, nil and an error from the call to Scan.
-func ScanTableItems(c context.Context, api DynamodbScanAPI, input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
-	result, err := api.Scan(c, input)
-
-	return result, err
-}
-
-// Get the movies with a minimum rating of minRating in year
+// Get the movies with a minimum rating of 8.0 in 2011
 func main() {
-	table := flag.String("t", "", "The name of the table")
-	minRating := flag.Float64("r", -1.0, "The minimum rating of the movies to retrieve")
-	year := flag.Int("y", -1, "The year the movies to retrieve were released")
-	flag.Parse()
+	tableName := "Movies"
+	minRating := 4.0
+	year := 2013
 
-	if *table == "" || *minRating < 0.0 || *year < 0 {
-		fmt.Println("You must supply a table name, minimum rating of 0.0, and year > 0 but < 2020")
-		fmt.Println("(-t TABLE -r RATING -y YEAR)")
-		return
-	}
-	// Create the expression to fill the input struct.
+	// Create the Expression to fill the input struct with.
 	// Get all movies in that year; we'll pull out those with a higher rating later
-	filt := "Year = :val"
+	filt := expression.Name("Year").Equal(expression.Value(year))
 
-	// Or we could get the movies by ratings and pull out those with the right year later
-	//    "info.rating > :val"
+	// Or we could get by ratings and pull out those with the right year later
+	//    filt := expression.Name("info.rating").GreaterThan(expression.Value(min_rating))
 
 	// Get back the title, year, and rating
-	proj := "Title, Year, Rating"
+	proj := expression.NamesList(expression.Name("Title"), expression.Name("Year"), expression.Name("Rating"))
 
-	// Value for expression
-	av := types.AttributeValue{
-		N: year,
+	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).Build()
+	if err != nil {
+		fmt.Println("Got error building expression:")
+		fmt.Println(err.Error())
+		return
 	}
 
-	valueMap := make(map[string]types.AttributeValue)
-	valueMap[":val"] = av
-
+	// Build the query input parameters
 	input := &dynamodb.ScanInput{
-		ExpressionAttributeValues: valueMap,
-		FilterExpression:          &filt,
-		ProjectionExpression:      &proj,
-		TableName:                 table,
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
@@ -91,78 +64,40 @@ func main() {
 	// Create a new DynamoDB Service Client
 	client := dynamodb.NewFromConfig(cfg)
 
-	// Dictionary<string, AttributeValue> lastKeyEvaluated = null
-	lastKeyEvaluated := make(map[string]types.AttributeValue)
-	done := false
 	var items []Item
 
-	for !done {
-		result, err := ScanTableItems(context.Background(), client, input)
-		if err != nil {
-			fmt.Println("Got an error scanning table:")
-			fmt.Println(err)
-			return
-		}
+	resp, err := client.Scan(context.Background(), input)
+	if err != nil {
+		fmt.Println("Got an error scanning the table:")
+		fmt.Println(err.Error())
+		return
+	}
 
-		lastKeyEvaluated = result.LastEvaluatedKey
+	itms := []Item{}
 
-		if len(lastKeyEvaluated) == 0 {
-			done = true
-			break
-		}
+	err = dynamodbattribute.UnmarshalListOfMaps(resp.Items, &itms)
+	if err != nil {
+		panic(fmt.Sprintf("failed to unmarshal Dynamodb Scan Items, %v", err))
+	}
 
-		// Items is an array of maps of [string]types.AttributeValue
-		gotYear := false
-		gotTitle := false
-		gotRating := false
+	items = append(items, itms...)
 
-		for _, item := range result.Items {
-			var i Item
+	var goodItems []Item
 
-			for key, value := range item {
-				var union types.AttributeValue
-				// type switches can be used to check the union value
-				switch v := union.(type) {
-				case *types.AttributeValueMemberN:
-					if key == "year" {
-						i.Year, err = strconv.Atoi(v.Value)
-						if err != nil {
-							fmt.Println("Got an error converting year " + v.Value + " to an int")
-							return
-						}
+	for _, item := range items {
+		// Which ones had a higher rating than minimum?
+		if item.Rating > minRating {
+			// Or it we had filtered by rating previously:
+			//   if item.Year == year {
+			goodItems = append(goodItems, item)
 
-						gotYear = true
-					}
-
-					if key == "rating" {
-						f, err := strconv.ParseFloat(v.Value, 64)
-						if err != nil {
-							fmt.Println("Got an error converting rating " + v.Value + " to a float")
-							return
-						}
-
-						i.Rating = f
-
-						gotRating = true
-					}
-
-				case *types.AttributeValueMemberS:
-					if key == "title" {
-						i.Title = v.Value
-						gotTitle = true
-					}
-				}
-			}
-
-			if gotYear && gotTitle && gotRating {
-				if i.Rating > *minRating {
-					items = append(items, i)
-				}
-			}
+			fmt.Println("Title: ", item.Title)
+			fmt.Println("Rating:", item.Rating)
+			fmt.Println()
 		}
 	}
 
-	fmt.Println("Found", strconv.Itoa(len(items)), "movie(s) with a rating above", *minRating, "in", *year)
-}
+	numItems := strconv.Itoa(len(goodItems))
 
-// snippet-end:[dynamodb.go.scan_table_items]
+	fmt.Println("Found", numItems, "movie(s) with a rating above", minRating, "in", year)
+}

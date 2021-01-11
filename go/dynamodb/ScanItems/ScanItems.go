@@ -2,44 +2,48 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-
-	// "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-
-	//"github.com/aws/aws-sdk-go-v2/service/dynamodb/expression"
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 // Item holds info about the items returned by Scan
 type Item struct {
-	Year   int
-	Title  string
-	Rating float64
+	Title string
+	Info  struct {
+		Rating float64
+	}
 }
 
-// Get the movies with a minimum rating of 8.0 in 2011
+// Get the movies above a minimum rating in a specific year.
 func main() {
-	tableName := "Movies"
-	minRating := 4.0
-	year := 2013
+	table := flag.String("t", "", "The name of the table to scan.")
+	rating := flag.Float64("r", -1.0, "The minimum rating for a movie to retrieve.")
+	year := flag.Int("y", 1899, "The year when the movie was released.")
+	verbose := flag.Bool("v", false, "Whether to show info about the movie.")
 
-	// Create the Expression to fill the input struct with.
-	// Get all movies in that year; we'll pull out those with a higher rating later
-	filt := expression.Name("Year").Equal(expression.Value(year))
+	flag.Parse()
 
-	// Or we could get by ratings and pull out those with the right year later
-	//    filt := expression.Name("info.rating").GreaterThan(expression.Value(min_rating))
+	if *table == "" || *rating < 0.0 || *year < 1900 {
+		fmt.Println("You must supply the name of the table, a rating above zero, and a year after 1900:")
+		fmt.Println("-t TABLE -r RATING -y YEAR")
+		return
+	}
 
-	// Get back the title, year, and rating
-	proj := expression.NamesList(expression.Name("Title"), expression.Name("Year"), expression.Name("Rating"))
+	// Get all movies in that year.
+	filt1 := expression.Name("year").Equal(expression.Value(*year))
+	// Get movies with the rating above the minimum.
+	filt2 := expression.Name("info.rating").GreaterThan(expression.Value(*rating))
 
-	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).Build()
+	// Get back the title and rating (we know the year)
+	proj := expression.NamesList(expression.Name("title"), expression.Name("info.rating"))
+
+	expr, err := expression.NewBuilder().WithFilter(filt1).WithFilter(filt2).WithProjection(proj).Build()
 	if err != nil {
 		fmt.Println("Got error building expression:")
 		fmt.Println(err.Error())
@@ -52,7 +56,7 @@ func main() {
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 table,
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
@@ -61,7 +65,6 @@ func main() {
 	}
 
 	// Using the Config value, create the DynamoDB client
-	// Create a new DynamoDB Service Client
 	client := dynamodb.NewFromConfig(cfg)
 
 	var items []Item
@@ -75,29 +78,22 @@ func main() {
 
 	itms := []Item{}
 
-	err = dynamodbattribute.UnmarshalListOfMaps(resp.Items, &itms)
+	err = attributevalue.UnmarshalListOfMaps(resp.Items, &itms)
 	if err != nil {
 		panic(fmt.Sprintf("failed to unmarshal Dynamodb Scan Items, %v", err))
 	}
 
 	items = append(items, itms...)
 
-	var goodItems []Item
-
 	for _, item := range items {
-		// Which ones had a higher rating than minimum?
-		if item.Rating > minRating {
-			// Or it we had filtered by rating previously:
-			//   if item.Year == year {
-			goodItems = append(goodItems, item)
-
+		if *verbose {
 			fmt.Println("Title: ", item.Title)
-			fmt.Println("Rating:", item.Rating)
+			fmt.Println("Rating:", item.Info.Rating)
 			fmt.Println()
 		}
 	}
 
-	numItems := strconv.Itoa(len(goodItems))
+	numItems := strconv.Itoa(len(items))
 
-	fmt.Println("Found", numItems, "movie(s) with a rating above", minRating, "in", year)
+	fmt.Println("Found", numItems, "movie(s) with a rating above", *rating, "in", *year)
 }

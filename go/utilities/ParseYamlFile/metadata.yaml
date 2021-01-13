@@ -1,0 +1,23 @@
+files:
+  - path: DIRECTORY1/FILE1.ext
+    description: This example
+    services:
+      - service: SERVICE1
+        operations:
+          - s1op1
+          - s1op2
+      - service: SERVICE2
+        operations:
+          - s2op1
+          - s2op2
+  - path: DIRECTORY2/FILE2.ext
+    description: This example
+    services:
+      - service: SERVICE1
+        operations:
+          - s1op1
+          - s1op2
+      - service: SERVICE2
+        operations:
+          - s2op1
+          - s2op2

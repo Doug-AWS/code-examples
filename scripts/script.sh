@@ -22,7 +22,6 @@ for f in $@ ; do
     # Do any end with "_test.go"?
     path="$(dirname $f)"
     file="$(basename $f)"
-    echo Looking at $file in $path
 
     # If it's a go test file
     # test it

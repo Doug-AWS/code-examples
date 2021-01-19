@@ -1,5 +1,3 @@
-# echo args
-
 TestGoFile () {
     if [ "$1" != "" ]
     then

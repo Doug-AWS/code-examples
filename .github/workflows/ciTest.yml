@@ -31,7 +31,7 @@ jobs:
         uses: jitterbit/get-changed-files@v1
       - run: |
           # make file runnable, might not be necessary
-          chmod +x "${GITHUB_WORKSPACE}/.github/script.sh"
+          chmod +x "${GITHUB_WORKSPACE}/scripts/script.sh"
 
           # run script
-          "${GITHUB_WORKSPACE}/.github/script.sh ${{ steps.files.outputs.all }}"
+          "${GITHUB_WORKSPACE}/scripts/script.sh ${{ steps.files.outputs.all }}"

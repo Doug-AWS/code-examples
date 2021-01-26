@@ -2,11 +2,12 @@ import * as cdk from '@aws-cdk/core';
 import * as cfn from '@aws-cdk/aws-cloudformation';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as lambda from '@aws-cdk/aws-lambda';
+import { DynamoEventSource, SnsEventSource, SqsEventSource, SqsDlq } from '@aws-cdk/aws-lambda-event-sources';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as nots from '@aws-cdk/aws-s3-notifications';
-//import * as sns from '@aws-cdk/aws-sns';
-//import * as subs from '@aws-cdk/aws-sns-subscriptions';
-//import * as sqs from '@aws-cdk/aws-sqs';
+import * as sns from '@aws-cdk/aws-sns';
+import * as subs from '@aws-cdk/aws-sns-subscriptions';
+import * as sqs from '@aws-cdk/aws-sqs';
 import * as path from 'path';
 import { StreamViewType } from '@aws-cdk/aws-dynamodb';
 import { EventType } from '@aws-cdk/aws-s3';
@@ -17,8 +18,7 @@ export class HelloCdkStack extends cdk.Stack {
     super(scope, id, props);
 
     // Create DynamoDB table with primary key id (string)
-
-    const myTable = new dynamodb.Table(this, 'Table', {
+    const myTable = new dynamodb.Table(this, 'MyTable', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       stream: StreamViewType.NEW_IMAGE,
     });
@@ -27,22 +27,16 @@ export class HelloCdkStack extends cdk.Stack {
     const myBucket = new s3.Bucket(this, "MyBucket",);
 
     // Create SNS topic
-    /*
     const myTopic = new sns.Topic(this, 'MyTopic', {
       displayName: 'User subscription topic'
     });
-    */
 
     // Create SQS queue
-    /*
     const myQueue = new sqs.Queue(this, 'MyQueue');
-    */
 
     // Subscribe a queue to the topic:
-    /*
     const mySubscription = new subs.SqsSubscription(myQueue)
     myTopic.addSubscription(mySubscription);
-    */
 
     /* Create Lambda functions for all sources:
        Note that on Windows you'll have to replace the functions with a ZIP file you create by:
@@ -65,6 +59,22 @@ export class HelloCdkStack extends cdk.Stack {
       code: new lambda.AssetCode('src/dynamodb'), // Go source file is (relative to cdk.json): src/dynamodb/main.go
     });
 
+    // Set up dead-letter queue for failed DynamoDB or SNS events
+    const dlQueue = new sqs.Queue(this, 'MyDLQueue');
+
+    // See
+    //   https://docs.aws.amazon.com/cdk/api/latest/docs/aws-lambda-event-sources-readme.html
+    // for information on Lambda event sources.
+
+    // Configure Lambda function to handle events from DynamoDB table.
+    myDynamoDbFunction.addEventSource(new DynamoEventSource(myTable, {
+      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+      batchSize: 5,
+      bisectBatchOnError: true,
+      onFailure: new SqsDlq(dlQueue),
+      retryAttempts: 10
+    }));
+
     // S3 Lambda function
     const myS3Function = new lambda.Function(this, 'MyS3Function', {
       runtime: lambda.Runtime.GO_1_X,
@@ -72,6 +82,7 @@ export class HelloCdkStack extends cdk.Stack {
       code: new lambda.AssetCode('src/s3'), // Go source file is (relative to cdk.json): src/s3/main.go
     });
 
+    // Configure S3 bucket to send notification events to Lambda function.
     myBucket.addEventNotification(EventType.OBJECT_CREATED, new nots.LambdaDestination(myS3Function))
 
     /* Test the function from the command line by sending a notification (this does not upload KEY-NAME to BUCKET-NAME) with:
@@ -86,27 +97,50 @@ export class HelloCdkStack extends cdk.Stack {
     */
     
     // SNS Lambda function:
-    /*
     const mySNSFunction = new lambda.Function(this, 'MySNSFunction', {
       runtime: lambda.Runtime.GO_1_X,
-      handler: 'main.handler',
+      handler: 'main',
       code: new lambda.AssetCode('src/sns'), // Go source file is (relative to cdk.json): src/sns/main.go
     });
-    */
+
+    // Configure Lambda function to handle events from SNS topic.
+    mySNSFunction.addEventSource(new SnsEventSource(myTopic, {
+      filterPolicy: {
+        Field: sns.SubscriptionFilter.stringFilter({  // See https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-sns.SubscriptionFilter.html
+          whitelist: ['cat', 'dog'],  // Only include events that match 
+        }),
+      },
+      deadLetterQueue: dlQueue,
+    }));
    
     // SQS Lambda function:
-    /*
     const mySQSFunction = new lambda.Function(this, 'MySQSFunction', {
       runtime: lambda.Runtime.GO_1_X,
-      handler: 'main.handler',
+      handler: 'main',
       code: new lambda.AssetCode('src/sqs'), // Go source file is (relative to cdk.json): src/sqs/main.go
     });
-    */
+
+    // Configure Lambda function to handle events from SQS queue.
+    mySQSFunction.addEventSource(new SqsEventSource(myQueue, {
+      batchSize: 10, // default
+    }));
     
     // Barf out info about the resources
     new CfnOutput(this, 'Bucket name: ', {value: myBucket.bucketName});
-    new CfnOutput(this, 'S3 Function name: ', {value: myS3Function.functionName});
-    new CfnOutput(this, 'CloudWatch log: ', {value: myS3Function.logGroup.logGroupName});
+    new CfnOutput(this, 'S3 function name: ', {value: myS3Function.functionName});
+    new CfnOutput(this, 'S3 function CloudWatch log group: ', {value: myS3Function.logGroup.logGroupName});
+
+    new CfnOutput(this, 'Table name: ', {value: myTable.tableName});
+    new CfnOutput(this, 'DynamoDB function name: ', {value: myDynamoDbFunction.functionName});
+    new CfnOutput(this, 'DynamoDB function CloudWatch log group: ', {value: myDynamoDbFunction.logGroup.logGroupName});
+
+    new CfnOutput(this, 'Topic name: ', {value: myTopic.topicName});
+    new CfnOutput(this, 'SNS function name: ', {value: mySNSFunction.functionName});
+    new CfnOutput(this, 'SNS function CloudWatch log group: ', {value: mySNSFunction.logGroup.logGroupName});
+
+    new CfnOutput(this, 'Queue name: ', {value: myQueue.queueName});
+    new CfnOutput(this, 'SQS function name: ', {value: mySQSFunction.functionName});
+    new CfnOutput(this, 'SQS function CloudWatch log group: ', {value: mySQSFunction.logGroup.logGroupName});
   }
 }
 

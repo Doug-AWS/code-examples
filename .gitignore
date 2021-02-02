@@ -33,3 +33,7 @@ target/
 vendor/
 venv
 vs/
+main.zip
+node_modules/
+cdk.out/
+package-lock.json

@@ -44,19 +44,33 @@ func (p Printer) Walk(name exif.FieldName, tag *tiff.Tag) error {
 	return nil
 }
 
-func getMetadata(bucket string, key string) error {
+func saveMetadata(bucket string, key string) error {
+	// Ignore anything that doesn't have upload prefix or end with jpg or png
 	// Make sure key ends in JPG or PNG
 	parts := strings.Split(key, ".")
 
 	if len(parts) < 2 {
-		msg := "Could not split '" + key + "' into name/extension"
-		return errors.New(msg)
+		fmt.Println("Could not split '" + key + "' into name/extension")
+		return nil
+	}
+
+	if parts[1] != "jpg" && parts[1] != "png" {
+		fmt.Println("Extension '" + parts[1] + "' is not jpg or png")
+		return nil
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		msg := "Got configuration error loading context: " + err.Error()
 		return errors.New(msg)
+	}
+
+	// Trap anything without upload/ prefix
+	pieces := strings.Split(parts[1], "/")
+
+	if pieces[0] != "upload" {
+		fmt.Println(parts[1] + " does not have upload/ prefix")
+		return nil
 	}
 
 	s3Client := s3.NewFromConfig(cfg)
@@ -111,15 +125,21 @@ func getMetadata(bucket string, key string) error {
 	return nil
 }
 
-func handler(ctx context.Context, s3Event events.S3Event) {
-	for _, record := range s3Event.Records {
-		s3 := record.S3
-		err := getMetadata(s3.Bucket.Name, s3.Object.Key)
-		if err != nil {
-			msg := "Did not get metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "'"
-			fmt.Println(msg)
-		}
+func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
+	s3 := s3Event.Records[0].S3
+	err := saveMetadata(s3.Bucket.Name, s3.Object.Key)
+	if err != nil {
+		msg := "Got error saving metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "':"
+		fmt.Println(msg)
+		fmt.Println(err)
+
+		return "", err
 	}
+
+	msg := "Saved metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "'"
+	fmt.Println(msg)
+
+	return "{ \"Payload\": { \"bucket\": " + s3.Bucket.Name + ", \"key\": " + s3.Object.Key + " } }", nil
 }
 
 func main() {

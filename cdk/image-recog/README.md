@@ -10,17 +10,10 @@ workflow.
 
 This workflow is as follows:
 
-- The user opens the Go app.
-- The app gets the fully-qualified path to a JPG or PNG photo.
+- The user calls the Go app with the fully-qualified path to a JPG or PNG photo.
 - The app uploads the photo to an S3 bucket with the **upload/** prefix.
-- The upload event triggers a Lambda function,
-  which calls the following AWS Step Functions if the file is a JPG or PNG:
-  1. Confirms that the photo is a JPG or PNG.
-     If not, it logs an error and returns.
-  1. Gets the photo from S3
-  1. Extracts image metadata (format, EXIF data, size, etc.)   
-  1. Calls:
-     - Amazon Rekognition to detect objects in the image file. 
-       If detected, store the tags in a DynamoDB table
-     - Generates a thumbnail and stores it in the S3 bucket with the **resized/** prefix
+- The upload event triggers a Step Function workflow with the following steps as Lambda functions:
+  1. Adds metadata from the photo to a Dynamodb table.     
+  1. Calls Amazon Rekognition to detect objects in the image file.
+  1. Generates a thumbnail and stores it in the S3 bucket with the **resized/** prefix
 

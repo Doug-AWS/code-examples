@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+import 'source-map-support/register';
+
 import * as cdk from '@aws-cdk/core';
 // import { Duration } from "@aws-cdk/core";
 // import * as codebuild from '@aws-cdk/aws-codebuild';
@@ -229,3 +232,6 @@ export class ImageRecogStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'State machine: ', { value: myStateMachine.stateMachineName });
   }
 }
+
+const app = new cdk.App();
+new ImageRecogStack(app, 'ImageRecogStack');

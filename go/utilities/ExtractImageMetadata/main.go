@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"flag"
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/rwcarlsen/goexif/tiff"
 )
@@ -55,20 +61,65 @@ func partition(arr []Entry, start, end int) int {
 	return pIndex
 }
 
-func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("please give filename as argument")
-	}
-	fname := os.Args[1]
+func addDataToTable(file string, table string, entries []Entry) error {
+	numItems := len(entries) + 1
+	attrs := make(map[string]types.AttributeValue, numItems)
 
-	f, err := os.Open(fname)
+	attrs["path"] = &types.AttributeValueMemberS{
+		Value: "uploads/" + file,
+	}
+
+	for _, e := range entries {
+		if e.entryName != "" {
+			attrs[e.entryName] = &types.AttributeValueMemberS{
+				Value: e.entryTag,
+			}
+		}
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		log.Fatal(err)
+		panic("configuration error, " + err.Error())
+	}
+
+	dynamodbClient := dynamodb.NewFromConfig(cfg)
+
+	dynamodbInput := &dynamodb.PutItemInput{
+		TableName: aws.String(table),
+		Item:      attrs,
+	}
+
+	_, err = dynamodbClient.PutItem(context.TODO(), dynamodbInput)
+	if err != nil {
+		msg := "Got error calling PutItem: " + err.Error()
+		return errors.New(msg)
+	}
+
+	return nil
+}
+
+func main() {
+	file := flag.String("f", "", "The name of the JPG or PNG file to get ELIF info from")
+	table := flag.String("t", "", "The name of the table to store info into")
+	flag.Parse()
+
+	if *file == "" {
+		fmt.Println("You must supply a filename (-f FILENAME)")
+		return
+	}
+
+	f, err := os.Open(*file)
+	if err != nil {
+		fmt.Println("Got an error opening " + *file + ":")
+		fmt.Println(err)
+		return
 	}
 
 	x, err := exif.Decode(f)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Got an error decoding EXIF info:")
+		fmt.Println(err)
+		return
 	}
 
 	entries = make([]Entry, 1)
@@ -76,7 +127,15 @@ func main() {
 	var p Printer
 	x.Walk(p)
 
-	// Sort entries:
+	if *table != "" {
+		err := addDataToTable(*file, *table, entries)
+		if err != nil {
+			fmt.Println("Got an error adding data to table " + *table + ":")
+			fmt.Println(err)
+		}
+	}
+
+	// Sort entries (does it make any difference when we add to table?)
 	quickSort(&entries, 0, len(entries)-1)
 
 	// Barf out entries:

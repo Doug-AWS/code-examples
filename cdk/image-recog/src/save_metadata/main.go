@@ -44,6 +44,36 @@ func (p Printer) Walk(name exif.FieldName, tag *tiff.Tag) error {
 	return nil
 }
 
+func addDataToTable(table string, entries []Entry, numItems int) error {
+	attrs := make(map[string]*types.AttributeValue, numItems)
+
+	for _, e := range entries {
+		if e.entryName != "" {
+			attrs[e.entryName] = &types.AttributeValue{
+				S: aws.String(e.entryTag),
+			}
+		}
+	}
+
+	// Add entries to DynamoDB table
+	// Get table name from environment
+
+	dynamodbClient := dynamodb.NewFromConfig(cfg)
+
+	dynamodbInput := &dynamodb.PutItemInput{
+		TableName: aws.String(table),
+		Item:      attrs,
+	}
+
+	_, err = dynamodbClient.PutItem(context.TODO(), dynamodbInput)
+	if err != nil {
+		msg := "Got error calling PutItem: " + err.Error()
+		return errors.New(msg)
+	}
+
+	return nil
+}
+
 func saveMetadata(bucket string, key string) error {
 	// Ignore anything that doesn't have upload prefix or end with jpg or png
 	// Make sure key ends in JPG or PNG
@@ -96,33 +126,11 @@ func saveMetadata(bucket string, key string) error {
 	var p Printer
 	x.Walk(p)
 
-	attrs := make(map[string]*types.AttributeValue, len(entries))
+	table := os.Getenv("tableName")
 
-	for _, e := range entries {
-		if e.entryName != "" {
-			attrs[e.entryName] = &types.AttributeValue{
-				S: aws.String(e.entryTag),
-			}
-		}
-	}
+	err = addDataToTable(table, entries, len(entries))
 
-	// Add entries to DynamoDB table
-	// Get table name from environment
-
-	dynamodbClient := dynamodb.NewFromConfig(cfg)
-
-	dynamodbInput := &dynamodb.PutItemInput{
-		TableName: aws.String(os.Getenv("tableName")),
-		Item:      attrs,
-	}
-
-	_, err = dynamodbClient.PutItem(context.TODO(), dynamodbInput)
-	if err != nil {
-		msg := "Got error calling PutItem: " + err.Error()
-		return errors.New(msg)
-	}
-
-	return nil
+	return err
 }
 
 func handler(ctx context.Context, s3Event events.S3Event) (string, error) {

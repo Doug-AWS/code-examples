@@ -2,144 +2,126 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/rekognition"
+	"github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/aws/aws-sdk-go/aws"
-
-	"github.com/rwcarlsen/goexif/exif"
-	"github.com/rwcarlsen/goexif/tiff"
 )
 
-type item map[string]types.AttributeValue
-
-// Entry defines an exif name/value pair
+// Entry defines an item we add to the db
 type Entry struct {
-	entryName string
-	entryTag  string
+	Label      string
+	Confidence string
 }
 
-var entries []Entry
-
-// Printer defines a struct
-type Printer struct{}
-
-// Walk traverses the image metadata
-func (p Printer) Walk(name exif.FieldName, tag *tiff.Tag) error {
-	e := Entry{
-		entryName: string(name),
-		entryTag:  fmt.Sprintf("%s", tag),
-	}
-
-	entries = append(entries, e)
-
-	return nil
+// MyEvent defines the event we get
+type MyEvent struct {
+	Bucket string
+	Key    string
 }
 
-func saveMetadata(bucket string, key string) error {
-	// Ignore anything that doesn't have upload prefix or end with jpg or png
-	// Make sure key ends in JPG or PNG
-	parts := strings.Split(key, ".")
+// KeyInfo defines the key of the item to update
+type KeyInfo struct {
+	Path string
+}
 
-	if len(parts) < 2 {
-		fmt.Println("Could not split '" + key + "' into name/extension")
-		return nil
-	}
-
-	if parts[1] != "jpg" && parts[1] != "png" {
-		fmt.Println("Extension '" + parts[1] + "' is not jpg or png")
-		return nil
-	}
-
+func addDataToTable(table string, eventKey string, entries []Entry) error {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		msg := "Got configuration error loading context: " + err.Error()
-		return errors.New(msg)
+		fmt.Println("Got an error loading configuration")
+		return err
 	}
 
-	// Trap anything without upload/ prefix
-	pieces := strings.Split(parts[1], "/")
+	client := dynamodb.NewFromConfig(cfg)
 
-	if pieces[0] != "upload" {
-		fmt.Println(parts[1] + " does not have upload/ prefix")
-		return nil
+	// We're adding these to the same table item,
+	// so specify the key, based on the original filename
+	// If eventKey doesn't start with uploads/, prefix it with that
+	parts := strings.Split(eventKey, "/")
+
+	if len(parts != 2) {
+		eventKey = "uploads/" + eventKey
 	}
 
-	s3Client := s3.NewFromConfig(cfg)
-
-	s3Input := &s3.GetObjectInput{
-		Bucket: &bucket, Key: &key,
+	tableKey := KeyInfo{
+		Path: eventKey,
 	}
 
-	s3Resp, err := s3Client.GetObject(context.TODO(), s3Input)
+	key, err := attributevalue.MarshalMap(tableKey)
 	if err != nil {
-		msg := "Got error calling GetObject: " + err.Error()
-		return errors.New(msg)
+		fmt.Println("Got error marshalling path")
+		return err
 	}
-
-	x, err := exif.Decode(s3Resp.Body)
-	if err != nil {
-		msg := "Got error decoding exif data: " + err.Error()
-		return errors.New(msg)
-	}
-
-	entries = make([]Entry, 1)
-
-	var p Printer
-	x.Walk(p)
-
-	attrs := make(map[string]*types.AttributeValue, len(entries))
 
 	for _, e := range entries {
-		if e.entryName != "" {
-			attrs[e.entryName] = &types.AttributeValue{
-				S: aws.String(e.entryTag),
-			}
+		expr, err := attributevalue.MarshalMap(e)
+		if err != nil {
+			fmt.Println("Got error marshalling item")
+			return err
+		}
+
+		input := &dynamodb.UpdateItemInput{
+			TableName:                 aws.String(table),
+			Key:                       key,
+			UpdateExpression:          aws.String(""),
+			ExpressionAttributeValues: expr,
+		}
+
+		_, err = client.UpdateItem(context.TODO(), input)
+		if err != nil {
+			fmt.Println("Got error calling UpdateItem: ")
+			return err
 		}
 	}
 
-	// Add entries to DynamoDB table
-	// Get table name from environment
-
-	dynamodbClient := dynamodb.NewFromConfig(cfg)
-
-	dynamodbInput := &dynamodb.PutItemInput{
-		TableName: aws.String(os.Getenv("tableName")),
-		Item:      attrs,
-	}
-
-	_, err = dynamodbClient.PutItem(context.TODO(), dynamodbInput)
-	if err != nil {
-		msg := "Got error calling PutItem: " + err.Error()
-		return errors.New(msg)
-	}
-
 	return nil
 }
 
-func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
-	s3 := s3Event.Records[0].S3
-	err := saveMetadata(s3.Bucket.Name, s3.Object.Key)
+func handler(ctx context.Context, event MyEvent) (string, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		msg := "Got error saving metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "':"
-		fmt.Println(msg)
-		fmt.Println(err)
-
+		fmt.Println("Unable to load SDK config")
 		return "", err
 	}
 
-	msg := "Saved metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "'"
-	fmt.Println(msg)
+	// Using the Config value, create the Rekognition client
+	client := rekognition.NewFromConfig(cfg)
 
-	return "{ \"Payload\": { \"bucket\": " + s3.Bucket.Name + ", \"key\": " + s3.Object.Key + " } }", nil
+	input := &rekognition.DetectLabelsInput{
+		Image: &types.Image{
+			S3Object: &types.S3Object{
+				Bucket: &event.Bucket,
+				Name:   &event.Key,
+			},
+		},
+	}
+
+	resp, err := client.DetectLabels(context.TODO(), input)
+
+	var entries = make([]Entry, 1)
+
+	for _, label := range resp.Labels {
+		c := fmt.Sprintf("%f", *label.Confidence)
+		e := Entry{
+			Label:      *label.Name,
+			Confidence: c,
+		}
+
+		entries = append(entries, e)
+	}
+
+	table := os.Getenv("tableName")
+
+	err = addDataToTable(table, event.Key, entries)
+
+	return "{ \"Bucket\": " + event.Bucket + ", \"Key\": " + event.Key + " }", err
 }
 
 func main() {

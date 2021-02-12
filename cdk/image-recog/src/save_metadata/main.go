@@ -44,7 +44,8 @@ func (p Printer) Walk(name exif.FieldName, tag *tiff.Tag) error {
 	return nil
 }
 
-func addDataToTable(table string, entries []Entry, numItems int) error {
+func addDataToTable(table string, entries []Entry) error {
+	numItems := len(entries)
 	attrs := make(map[string]*types.AttributeValue, numItems)
 
 	for _, e := range entries {
@@ -55,8 +56,11 @@ func addDataToTable(table string, entries []Entry, numItems int) error {
 		}
 	}
 
-	// Add entries to DynamoDB table
-	// Get table name from environment
+	// (import "github.com/aws/aws-sdk-go-v2/config")
+	cfg, err := config.LoadDefaultConfig()
+	if err != nil {
+		panic("configuration error, " + err.Error())
+	}
 
 	dynamodbClient := dynamodb.NewFromConfig(cfg)
 
@@ -128,7 +132,7 @@ func saveMetadata(bucket string, key string) error {
 
 	table := os.Getenv("tableName")
 
-	err = addDataToTable(table, entries, len(entries))
+	err = addDataToTable(table, entries)
 
 	return err
 }
@@ -147,7 +151,7 @@ func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
 	msg := "Saved metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "'"
 	fmt.Println(msg)
 
-	return "{ \"Payload\": { \"bucket\": " + s3.Bucket.Name + ", \"key\": " + s3.Object.Key + " } }", nil
+	return "{ \"Bucket\": " + s3.Bucket.Name + ", \"Key\": " + s3.Object.Key + " }", nil
 }
 
 func main() {

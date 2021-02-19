@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "imagerecogstack-docexamplebucket34a03655-14hrzfv29r1dd"
+        },
+        "object": {
+          "key": "uploads/DonaldTrumpTheLemmingLeader.jpg"
+        }
+      }
+    }
+  ]
+}

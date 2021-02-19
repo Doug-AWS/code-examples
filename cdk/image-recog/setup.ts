@@ -18,6 +18,7 @@ import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as sfn from '@aws-cdk/aws-stepfunctions';
 import { WaitTime } from "@aws-cdk/aws-stepfunctions";
 import * as tasks from '@aws-cdk/aws-stepfunctions-tasks';
+import { Effect } from '@aws-cdk/aws-iam';
 
 export class ImageRecogStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -79,6 +80,17 @@ export class ImageRecogStack extends cdk.Stack {
       },
     });
 
+    // Add policy to Lambda function so it can call
+    // GetObject on bucket and PutItem on table.
+    const s3Policy = new iam.PolicyStatement({
+      sid: "doc-example-s3-statement",
+      actions: ["s3:GetObject", "dynamodb:PutItem"],
+      effect: Effect.ALLOW,
+      resources: [myBucket.bucketArn + "/*", myTable.tableArn + "/*"],
+    })
+
+    saveMetadataFunction.role?.addToPrincipalPolicy(s3Policy)
+
     // Lambda function that:
     // 1. Calls Amazon Rekognition to detect objects in the image file
     // 2. Saves information about the objects in a Dynamodb table
@@ -91,6 +103,17 @@ export class ImageRecogStack extends cdk.Stack {
       },
     });
 
+    // Add policy to Lambda function so it can call
+    // PutItem on table.
+    const dbPolicy = new iam.PolicyStatement({
+      sid: "doc-example-s3-statement",
+      actions: ["dynamodb:PutItem"],
+      effect: Effect.ALLOW,
+      resources: [myTable.tableArn + "/*"],
+    })
+
+    saveObjectDataFunction.role?.addToPrincipalPolicy(dbPolicy)
+
     // Lambda function that:
     // 1. Gets the photo from S3
     // 2. Creates a thumbnail of the photo
@@ -100,6 +123,18 @@ export class ImageRecogStack extends cdk.Stack {
       handler: 'main',
       code: new lambda.AssetCode('src/create_thumbnail'), // Go source file is (relative to cdk.json): src/create_thumbnail/main.go
     });
+
+    // Add policy to Lambda function so it can call
+    // GetObject and PutObject on bucket.
+    const s32Policy = new iam.PolicyStatement({
+      sid: "doc-example-s3-statement",
+      actions: ["s3:GetObject", "s3:PutObject"],
+      effect: Effect.ALLOW,
+      resources: [myBucket.bucketArn + "/*"],
+    })
+
+    createThumbnailFunction.role?.addToPrincipalPolicy(s32Policy)
+
 
 
     // Create Lambda function to get status of uploaded data for state machine
@@ -223,7 +258,11 @@ export class ImageRecogStack extends cdk.Stack {
     // You can see this information at any time by running:
     //   aws cloudformation describe-stacks --stack-name ImageRecogStack --query Stacks[0].Outputs --output text
     new cdk.CfnOutput(this, 'Bucket name: ', { value: myBucket.bucketName });
-    new cdk.CfnOutput(this, 'S3 function name: ', { value: saveMetadataFunction.functionName });
+
+    new cdk.CfnOutput(this, 'Save metadata function: ', { value: saveMetadataFunction.functionName });
+    new cdk.CfnOutput(this, 'Save object data function: ', { value: saveObjectDataFunction.functionName });
+    new cdk.CfnOutput(this, 'Create thumbnail function: ', { value: createThumbnailFunction.functionName });
+
     new cdk.CfnOutput(this, 'S3 function CloudWatch log group: ', { value: saveMetadataFunction.logGroup.logGroupName });
 
     // new cdk.CfnOutput(this, 'Status function: ', { value: getStatusLambda.functionName });

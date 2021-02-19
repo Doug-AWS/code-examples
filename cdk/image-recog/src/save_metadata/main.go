@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+
+	// "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,9 +46,36 @@ func (p Printer) Walk(name exif.FieldName, tag *tiff.Tag) error {
 	return nil
 }
 
-func addDataToTable(table string, entries []Entry) error {
-	numItems := len(entries)
+func isNameValid(key string) bool {
+	// Ignore anything that doesn't have upload prefix or end with jpg or png
+	// Make sure key ends in JPG or PNG
+	parts := strings.Split(key, ".")
+
+	if len(parts) < 2 {
+		return false
+	}
+
+	if parts[1] != "jpg" && parts[1] != "png" {
+		return false
+	}
+
+	// Trap anything without upload/ prefix
+	pieces := strings.Split(parts[0], "/")
+
+	if pieces[0] != "uploads" {
+		return false
+	}
+
+	return true
+}
+
+func addDataToTable(table string, key string, entries []Entry) error {
+	numItems := len(entries) + 1
 	attrs := make(map[string]*types.AttributeValue, numItems)
+
+	attrs["path"] = &types.AttributeValue{
+		S: aws.String(key),
+	}
 
 	for _, e := range entries {
 		if e.entryName != "" {
@@ -56,8 +85,7 @@ func addDataToTable(table string, entries []Entry) error {
 		}
 	}
 
-	// (import "github.com/aws/aws-sdk-go-v2/config")
-	cfg, err := config.LoadDefaultConfig()
+	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		panic("configuration error, " + err.Error())
 	}
@@ -78,33 +106,34 @@ func addDataToTable(table string, entries []Entry) error {
 	return nil
 }
 
-func saveMetadata(bucket string, key string) error {
+func saveMetadata(bucket string, key string, table string) error {
 	// Ignore anything that doesn't have upload prefix or end with jpg or png
 	// Make sure key ends in JPG or PNG
+	// uploads/filename.jpg -> uploads/filename, jpg
 	parts := strings.Split(key, ".")
 
 	if len(parts) < 2 {
-		fmt.Println("Could not split '" + key + "' into name/extension")
-		return nil
+		msg := "Could not split '" + key + "' into name/extension"
+		return errors.New(msg)
 	}
 
 	if parts[1] != "jpg" && parts[1] != "png" {
-		fmt.Println("Extension '" + parts[1] + "' is not jpg or png")
-		return nil
+		msg := "Extension '" + parts[1] + "' is not jpg or png"
+		return errors.New(msg)
+	}
+
+	// Trap anything without uploads/ prefix
+	pieces := strings.Split(parts[0], "/")
+
+	if pieces[0] != "uploads" {
+		msg := key + " does not have uploads/ prefix"
+		return errors.New(msg)
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		msg := "Got configuration error loading context: " + err.Error()
 		return errors.New(msg)
-	}
-
-	// Trap anything without upload/ prefix
-	pieces := strings.Split(parts[1], "/")
-
-	if pieces[0] != "upload" {
-		fmt.Println(parts[1] + " does not have upload/ prefix")
-		return nil
 	}
 
 	s3Client := s3.NewFromConfig(cfg)
@@ -128,18 +157,31 @@ func saveMetadata(bucket string, key string) error {
 	entries = make([]Entry, 1)
 
 	var p Printer
-	x.Walk(p)
+	err = x.Walk(p)
+	if err != nil {
+		return err
+	}
 
-	table := os.Getenv("tableName")
-
-	err = addDataToTable(table, entries)
+	err = addDataToTable(table, key, entries)
 
 	return err
 }
-
 func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
+	numEvents := len(s3Event.Records)
+
+	if numEvents < 1 {
+		return "", errors.New("Save metadata function got an empty S3 event")
+	}
+
+	fmt.Println("Got S3 event:")
+	fmt.Println(s3Event)
+
 	s3 := s3Event.Records[0].S3
-	err := saveMetadata(s3.Bucket.Name, s3.Object.Key)
+
+	// Get table name from environment
+	table := os.Getenv("tableName")
+
+	err := saveMetadata(s3.Bucket.Name, s3.Object.Key, table)
 	if err != nil {
 		msg := "Got error saving metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "':"
 		fmt.Println(msg)

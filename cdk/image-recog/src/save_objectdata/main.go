@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+
+	// "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue" // ???
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dbTypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,32 +48,46 @@ func addDataToTable(table string, eventKey string, entries []Entry) error {
 	// If eventKey doesn't start with uploads/, prefix it with that
 	parts := strings.Split(eventKey, "/")
 
-	if len(parts != 2) {
+	if len(parts) != 2 {
 		eventKey = "uploads/" + eventKey
 	}
 
-	tableKey := KeyInfo{
-		Path: eventKey,
+	key := make(map[string]*dbTypes.AttributeValue, 1)
+	key["path"] = &dbTypes.AttributeValue{
+		S: aws.String(eventKey),
 	}
 
-	key, err := attributevalue.MarshalMap(tableKey)
-	if err != nil {
-		fmt.Println("Got error marshalling path")
-		return err
-	}
+	/*
+		tableKey := KeyInfo{
+			Path: eventKey,
+		}
+
+		key, err := attributevalue.MarshalMap(tableKey)
+		if err != nil {
+			fmt.Println("Got error marshalling path")
+			return err
+		}
+	*/
+
+	attr := make(map[string]*dbTypes.AttributeValue, 1)
 
 	for _, e := range entries {
-		expr, err := attributevalue.MarshalMap(e)
-		if err != nil {
-			fmt.Println("Got error marshalling item")
-			return err
+		/*
+			expr, err := attributevalue.MarshalMap(e)
+			if err != nil {
+				fmt.Println("Got error marshalling item")
+				return err
+			}
+		*/
+		attr[e.Label] = &dbTypes.AttributeValue{
+			S: aws.String(e.Confidence),
 		}
 
 		input := &dynamodb.UpdateItemInput{
 			TableName:                 aws.String(table),
 			Key:                       key,
 			UpdateExpression:          aws.String(""),
-			ExpressionAttributeValues: expr,
+			ExpressionAttributeValues: attr,
 		}
 
 		_, err = client.UpdateItem(context.TODO(), input)

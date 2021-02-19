@@ -1,0 +1,416 @@
+#!/usr/bin/env python3
+
+# Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+# http://aws.amazon.com/apache2.0/
+#
+# or in the "LICENSE.txt" file accompanying this file.
+# This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, express or implied. See the License for the
+# specific language governing permissions and # limitations under the License.
+
+import argparse
+import distutils.spawn
+import getopt
+import getpass
+import logging
+import os
+import platform
+import re
+import subprocess as sub
+import sys
+import time
+import webbrowser
+
+
+DCV_CONNECT_SCRIPT = "/usr/libexec/dcvcddconnect.sh"
+VERSION = "0.2.4"
+
+PYTHON_MIN_VERSION_MAJOR = 3
+PYTHON_MIN_VERSION_MINOR = 6
+
+HELP = f'''
+Connect to a remote DCV Cloud Developer Desktop.
+
+This script creates a connection with the cloud dev desktop using the {DCV_CONNECT_SCRIPT}
+installed in the server, and perform one of several operations depending on the command.
+
+The supported commands are:
+* create-session: create a session on the cloud dev desktop
+* close-session: close the existing session on the cloud dev desktop
+* connect: create a connection if needed, and connect to the session using either a native
+  or a web client
+* share: provide a link which can be used to connect to an already created session
+
+This script requires Python >= {PYTHON_MIN_VERSION_MAJOR}.{PYTHON_MIN_VERSION_MINOR}.
+
+This script version is {VERSION}.
+'''
+
+logging.basicConfig(format='🔥 %(levelname)s : %(message)s ', level=logging.INFO)
+log = logging.getLogger('CDD')
+
+
+class DCVConnectionError(Exception):
+    """Error raised with DCV connection fails."""
+
+    pass
+
+
+SESSION_TOKEN_EXPIRE_SECONDS = 30
+GUEST_SESSION_TOKEN_EXPIRE_SECONDS = 120
+
+
+def _check_command_output(cmd):
+    env = os.environ
+    if re.match("^MSYS_NT.*", platform.system()):
+        # disable path expansion on MSYS/MSYS2
+        env['MSYS2_ARG_CONV_EXCL'] = '*'
+        env['MSYS_NO_PATHCONV'] = '1'
+
+    return sub.check_output(cmd, shell=True, universal_newlines=True, stderr=sub.STDOUT, env=env).strip()
+
+
+def error(message, fail_on_error=True):
+    """Print an error message and Raise SystemExit exception to the stderr if fail_on_error is true."""
+    log.error(message)
+    if fail_on_error:
+        sys.exit(1)
+
+
+def check_version(server_version, instance, user, ssh_tool):
+    """Compare the script version with the provided version, if it's lower print a warning."""
+    server_version_list = server_version.split(".")
+    current_version_list = VERSION.split(".")
+    server = (server_version_list[0], server_version_list[1], server_version_list[2])
+    current = (current_version_list[0], current_version_list[1], current_version_list[2])
+    if server > current:
+        path = os.path.realpath(__file__)
+        remote_path = '/usr/share/dcv/cdd/dcv-cdd.py'
+        command = 'pscp' if ssh_tool == 'plink' else 'scp'
+        update_command = f"{command} {user}@{instance}:{remote_path} {path}\n"
+        log.warning(f"Client script version is {VERSION} but a later version {server_version} is available on the server.\n"
+                    f"Please update the client script using the following or equivalent command:\n{update_command}")
+
+
+def _get_native_default_path():
+    path = None
+    try:
+        # Check if dcvviewer is in the path
+        path = "dcvviewer"
+        cmd = path + " --version"
+        log.debug(f"Checking the viewer command '{cmd}'...")
+        sub.check_output(cmd, shell=True, stderr=sub.STDOUT)
+    except Exception:
+        # Check if it is in a standard location
+        local_sys = platform.system()
+
+        if local_sys == "Windows":
+            path = "\"C:\\Program Files (x86)\\NICE\\DCV\\Client\\bin\\dcvviewer.exe\""
+        elif re.match("^MSYS_NT.*", local_sys):
+            # MSYS
+            path = "/c/Program\ Files\ \(x86\)/NICE/DCV/Client/bin/dcvviewer.exe"
+        elif local_sys == "Linux":
+            path = "/usr/bin/dcvviewer"
+        elif local_sys == "Darwin":
+            # Mac OsX
+            path = "/Applications/DCV\\ Viewer.app/Contents/MacOS/dcvviewer"
+        else:
+            log.warning(f"Unknown system {local_sys}, cannot find a path for the viewer")
+            path = None
+
+        if path:
+            try:
+                cmd = path + " --version"
+                log.debug(f"Checking the viewer command '{cmd}'...")
+                sub.check_output(cmd, shell=True, stderr=sub.STDOUT)
+            except Exception:
+                log.warning("Could not find the viewer in the system")
+                path = None
+
+    if path:
+        log.info(f"Found viewer with path '{path}'")
+    return path
+
+
+def dcv_run_command(args):
+    """
+    Execute cloud developer desktop dcv connect command.
+    :param args: options for the command
+    """
+
+    # autodetect SSH tool
+    ssh_tool = args.ssh_tool
+    if ssh_tool == 'auto':
+        import psutil
+
+        if platform.system() == "Windows" and not sys.maxsize > 2**32:
+            # see https://github.com/giampaolo/psutil/issues/1264
+            error(f"The used Python executable {sys.executable} is 32 bit, but this script needs Python 64 bit to work correctly with psutil on Windows.\nSwitch to Python 64 bit or specify the SSH tool to use with --ssh-tool.")
+
+        if 'pageant.exe' in (p.name() for p in psutil.process_iter()) and distutils.spawn.find_executable('plink'):
+            ssh_tool = 'plink'
+        else:
+            ssh_tool = 'ssh'
+
+    if not distutils.spawn.find_executable(ssh_tool):
+        error(f"No {ssh_tool} tool found in PATH, cannot connect to the remote developer desktop")
+
+    # Prepare ssh command to execute in the master instance
+    ssh_command = ssh_tool + ' -batch' if ssh_tool == 'plink' else ssh_tool
+
+    # connect / create-session / close-session / share
+    dcv_cmd = args.command
+
+    # Guest's arguments
+    if args.command == "share":
+        if args.get_token_guest:
+            dcv_cmd += " getTokenGuest " + args.get_token_guest
+        elif args.remove_guest:
+            dcv_cmd += " removeGuest " + args.remove_guest
+        elif args.update_guest:
+            dcv_cmd += " updateGuest " + args.update_guest
+        elif args.list_guests:
+            dcv_cmd += " listGuests"
+
+    # Permissions' alias
+    if args.command == "share" and args.mode:
+        dcv_cmd += " " + args.mode
+
+    cmd = f'{ssh_command} {args.user}@{args.instance} "{DCV_CONNECT_SCRIPT} {dcv_cmd}"'
+
+    try:
+        res = _retrieve_dcv_from_ssh(cmd, args.instance, args.user, ssh_tool)
+        log.debug(f"Got the following message through the SSH connection:\n{res}")
+    except DCVConnectionError as e:
+        error(f"SSH connection command failed with error:\n{e}")
+
+    if type(res) is dict:
+        server = res['server']
+        port = res['port']
+        token = res['token']
+        session_id = res['session_id']
+
+    # Connection requested (either for the owner or for a guest)
+    if args.command == "connect":
+        native = False
+
+        if args.native:
+            native = True
+            native_path = args.path if args.path else _get_native_default_path()
+            if not native_path:
+                error("No native client found in path.\n" +
+                      "Try specifing a path with the -p option or use the web client.")
+        elif not args.native and not args.web:
+            native_path = _get_native_default_path()
+            if native_path:
+                native = True
+            else:
+                log.info("No DCV native client found in default path, using the web client.")
+
+        if native:
+            try:
+                auth_params = f"\"{server}:{port}#{session_id}\" --auth-token={token}"
+                misc_params = ' '.join(args.native_params)
+                if platform.system() == 'Darwin':
+                    # open -a puts the viewer on foreground
+                    cmd = "open -a {0} --args {1} {2}".format(native_path, misc_params, auth_params)
+                else:
+                    cmd = "{0} {1} {2}".format(native_path, misc_params, auth_params)
+                log.debug(f"Launching command: {cmd}")
+                sub.check_call(cmd, shell=True, stderr=sub.STDOUT)
+            except sub.CalledProcessError as e:
+                error(f"Failed to launch the '{native_path}' client: {e}")
+        else: # web client
+            url = f"https://{server}:{port}?authToken={token}#{session_id}"
+            try:
+                log.debug(f"Launching webbrowser with URL '{url}'")
+                if not webbrowser.open_new(url):
+                    raise webbrowser.Error("Unsupported system")
+            except webbrowser.Error as e:
+                log.warning(f"Unable to open the web browser: {e}")
+                log.info(f"Please use the following one-time URL in your browser within {SESSION_TOKEN_EXPIRE_SECONDS} seconds:\n{url}")
+
+    elif args.command == "share" and args.get_token_guest:
+        # Failed to connect. Print message
+        if type(res) is dict:
+            url = f"https://{server}:{port}?authToken={token}#{session_id}"
+            log.info(f"Please use the following one-time URL in your browser within {GUEST_SESSION_TOKEN_EXPIRE_SECONDS} seconds:\n{url}")
+        else:
+            error(res)
+
+    else:
+        log.info(res)
+
+def _retrieve_dcv_from_ssh(ssh_cmd, instance, user, ssh_tool):
+    """
+    Connect by ssh to the master instance, prepare DCV session
+    and return the DCV session URL or native parameters.
+    """
+    try:
+        log.debug(f"Launching SSH command: {ssh_cmd}")
+        output = _check_command_output(ssh_cmd)
+        # At first ssh connection, the ssh command alerts it is adding the host to the known hosts list
+        if re.search("Permanently added .* to the list of known hosts.", output):
+            output = _check_command_output(ssh_cmd)
+
+        log.debug(f"The output of the command was:\n{output}")
+
+        server_script_version = None
+        while (True):
+            match = re.search(r"DcvServerPort=([\d]+) DcvSessionId=([\w]+) DcvSessionToken=([\w-]+) DcvClientScriptVersion=([\d]+[.][\d]+[.][\d]+)", output)
+            if match:
+                res = {
+                    "server": instance,
+                    "port": match.group(1),
+                    "session_id": match.group(2),
+                    "token": match.group(3)
+                }
+                server_script_version = match.group(4)
+                break
+
+            match = re.search(r"DcvClientScriptVersion=([\d]+[.][\d]+[.][\d]+)\n(.*)", output)
+            if match:
+                server_script_version = match.group(1)
+                res = match.group(2)
+                break;
+            elif output.startswith("Message from server:"):
+                # a message was generated
+                res = output
+                break
+            else:
+                error(f"Something went wrong during DCV connection. Please manually execute the command:\n{ssh_cmd}\n")
+
+    except sub.CalledProcessError as e:
+        log.debug(f"Connection command failed with output:\n{e.output}")
+
+        while True:
+            if re.match(f".*{DCV_CONNECT_SCRIPT}: No such file or directory", e.output):
+                log.error(f"Connection script '{DCV_CONNECT_SCRIPT}' seems missing on the server.\n"
+                          "Check if the DCV server is installed on your Cloud Developer Desktop")
+                break
+
+            if re.match(f".*Permission denied \(publickey\)", e.output) or \
+               re.match(".*No supported authentication methods available \(server sent: publickey\)", e.output):
+                if ssh_tool == "plink":
+                    midway_command = "launch Midway Daily Setup";
+                else:
+                    if re.match("^MSYS_NT.*", platform.system()):
+                        midway_command = "launch the following command from terminal: start mwinit"
+                    else:
+                        midway_command = "launch the following command from terminal: mwinit"
+
+                log.error("It looks like you are missing permissions to connect, make sure you initialized Midway.\n"
+                          f"To initialize Midway, {midway_command}")
+                break
+
+            # generic error
+            break
+
+        raise DCVConnectionError(e.output)
+
+    if server_script_version:
+        check_version(server_script_version, instance, user, ssh_tool)
+
+    return res
+
+
+def _add_shared_args(parser):
+    current_user = getpass.getuser()
+
+    # Mandatory
+    parser.add_argument("instance", type=str,
+                        help="The instance address where you want to connect")
+
+    # Other optional arguments
+    parser.add_argument("-u", "--user", type=str,
+                        default=current_user,
+                        help="The username for the connection (default: {0})".format(current_user))
+
+    if re.match("^(MSYS_NT|Windows).*", platform.system()):
+        ssh_choices = ["ssh", "plink"]
+        if re.match("^MSYS_NT.*", platform.system()):
+            default_ssh_tool= 'ssh'
+        else:
+            default_ssh_tool = 'auto'
+            ssh_choices += ['auto'] # psutil used to audo-detect cannot be installed on MSYS
+        help="Only for Windows, optional - Use it only if you want to specify the SSH tool to be used: " +\
+             "use 'plink' if you configured PuTTY with Midway or 'ssh' if you configured OpenSSH with Midway (default: {0})".format(default_ssh_tool)
+    else:
+        ssh_choices = ["ssh"]
+        default_ssh_tool= 'ssh'
+        help=argparse.SUPPRESS
+
+    parser.add_argument("--ssh-tool", type=str, choices=ssh_choices, default=default_ssh_tool, help=help)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=HELP, formatter_class=argparse.RawTextHelpFormatter)
+    subparsers = parser.add_subparsers(title="command", help="Command to be executed remotely.\nUse 'dcv-cdd.py COMMAND_NAME --help' for more usage details.", dest="command")
+
+    connect_parser = subparsers.add_parser("connect")
+    _add_shared_args(connect_parser)
+    connect_group = connect_parser.add_mutually_exclusive_group()
+    connect_group.add_argument("-n", "--native", action="store_true",
+                               help="Use the native client. Search the dcvviewer in path or in the standard path")
+    connect_group.add_argument("-p", "--path", type=str,
+                               metavar="dcvviewer_path",
+                               help="Use the native client. Pass the path of client executable dcvviewer")
+    connect_group.add_argument("-w", "--web", action="store_true",
+                               help="Use the web client (calls the default browser)")
+
+    share_parser = subparsers.add_parser("share")
+    _add_shared_args(share_parser)
+    share_group = share_parser.add_mutually_exclusive_group(required=True)
+    share_group.add_argument("--get-token", type=str, metavar="GUESTNAME", dest="get_token_guest",
+                             help="One time URL for session access")
+    share_group.add_argument("--remove", type=str, metavar="GUESTNAME", dest="remove_guest",
+                             help="Revoke the permission of a guest")
+    share_group.add_argument("--update", type=str, metavar="GUESTNAME", dest="update_guest",
+                             help="Update permissions of a guest")
+    share_group.add_argument("--list", action="store_true", dest="list_guests",
+                             help="List all guests with access permissions to session")
+    # --mode has "viewer" as default value, this default value is defined in the external authenticator dcvcddextauth.py and not here
+    share_parser.add_argument("--mode", type=str, metavar="PERMISSIONS",
+                              help="Guest permissions mode (can be 'viewer' or 'full_access')")
+
+    _add_shared_args(subparsers.add_parser("create-session"))
+    _add_shared_args(subparsers.add_parser("close-session"))
+
+    # Version
+    parser.add_argument("--version", action="version",
+                        version="{prog}s {version}".format(prog="%(prog)", version=VERSION))
+
+    parser.add_argument("--debug", "-d", default=False, action="store_true",
+                        help="Set the debug level to debug")
+
+    args, unknown = parser.parse_known_args()
+    if args.command == "connect" and args.path:
+        args.native = True
+
+    if args.debug:
+        log.setLevel(logging.DEBUG)
+
+    if unknown:
+        if unknown[0] == '--':
+            args.native_params = unknown[1:]
+        else:
+            args.native_params = unknown
+    else:
+        args.native_params = ['']
+
+    if not args.command:
+        error("The command argument is required")
+
+    pyver = sys.version_info
+    if pyver.major < PYTHON_MIN_VERSION_MAJOR or \
+       (pyver.major == PYTHON_MIN_VERSION_MAJOR and pyver.minor < PYTHON_MIN_VERSION_MINOR):
+        error(f"You are running python version {pyver.major}.{pyver.minor} but at least version {PYTHON_MIN_VERSION_MAJOR}.{PYTHON_MIN_VERSION_MINOR} is required")
+
+    dcv_run_command(args)
+
+# ex:ts=4:et:

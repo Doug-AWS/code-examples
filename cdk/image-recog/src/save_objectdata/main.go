@@ -101,6 +101,9 @@ func addDataToTable(table string, eventKey string, entries []Entry) error {
 }
 
 func handler(ctx context.Context, event MyEvent) (string, error) {
+	fmt.Println("Got event in save Rekognition event handler:")
+	fmt.Println(event)
+
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		fmt.Println("Unable to load SDK config")

@@ -153,6 +153,9 @@ func makeThumbnail(bucket, key string) (string, error) {
 }
 
 func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
+	fmt.Println("Got event in create thumbmail handler:")
+	fmt.Println(s3Event)
+
 	s3 := s3Event.Records[0].S3
 	savedObject, err := makeThumbnail(s3.Bucket.Name, s3.Object.Key)
 	if err != nil {

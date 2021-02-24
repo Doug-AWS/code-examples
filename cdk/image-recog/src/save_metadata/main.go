@@ -173,7 +173,7 @@ func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
 		return "", errors.New("Save metadata function got an empty S3 event")
 	}
 
-	fmt.Println("Got S3 event:")
+	fmt.Println("Got event in save ELIF data handler:")
 	fmt.Println(s3Event)
 
 	s3 := s3Event.Records[0].S3
@@ -193,7 +193,11 @@ func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
 	msg := "Saved metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "'"
 	fmt.Println(msg)
 
-	return "{ \"Bucket\": " + s3.Bucket.Name + ", \"Key\": " + s3.Object.Key + " }", nil
+	output := "{ \"Bucket\": " + s3.Bucket.Name + ", \"Key\": " + s3.Object.Key + " }"
+	fmt.Println("Returning: ")
+	fmt.Println(output)
+
+	return output, nil
 }
 
 func main() {

@@ -2,27 +2,25 @@
 import 'source-map-support/register';
 
 import * as cdk from '@aws-cdk/core';
-// import { Duration } from "@aws-cdk/core";
-// import * as codebuild from '@aws-cdk/aws-codebuild';
-// import * as amplify from '@aws-cdk/aws-amplify';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as cloudtrail from '@aws-cdk/aws-cloudtrail';
+import * as cw from '@aws-cdk/aws-cloudwatch';
 import * as events from '@aws-cdk/aws-events';
-import * as targets from '@aws-cdk/aws-events-targets';
-// import * as cloudwatch from '@aws-cdk/aws-cloudwatch';
-
-// import * as nots from '@aws-cdk/aws-s3-notifications';
 import * as iam from '@aws-cdk/aws-iam';
 import * as lambda from '@aws-cdk/aws-lambda';
+import * as logs from '@aws-cdk/aws-logs';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as sfn from '@aws-cdk/aws-stepfunctions';
-import { WaitTime } from "@aws-cdk/aws-stepfunctions";
 import * as tasks from '@aws-cdk/aws-stepfunctions-tasks';
 import { Effect } from '@aws-cdk/aws-iam';
 
-export class ImageRecogStack extends cdk.Stack {
+export class ImageStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Prefixes for images in s3
+    const inPrefix = "uploads"
+    const thumbPrefix = "thumbs"
 
     /* Use bucket event to execute a step function when an item uploaded to a bucket
      *   https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-cloudwatch-events-s3.html
@@ -42,11 +40,11 @@ export class ImageRecogStack extends cdk.Stack {
     // added to bucket are detected
     myTrail.addS3EventSelector([{
       bucket: myBucket,
-      objectPrefix: 'uploads/',
+      objectPrefix: inPrefix + '/',
     },]);
 
     // Create events rule
-    const rule = new events.Rule(this, 'rule', {
+    const myRule = new events.Rule(this, 'rule', {
       eventPattern: {
         source: ['aws.s3'],
       },
@@ -82,14 +80,20 @@ export class ImageRecogStack extends cdk.Stack {
 
     // Add policy to Lambda function so it can call
     // GetObject on bucket and PutItem on table.
+    /*
     const s3Policy = new iam.PolicyStatement({
-      sid: "doc-example-s3-statement",
+      sid: "docexamples3dbstatement",
       actions: ["s3:GetObject", "dynamodb:PutItem"],
       effect: Effect.ALLOW,
       resources: [myBucket.bucketArn + "/*", myTable.tableArn + "/*"],
     })
 
     saveMetadataFunction.role?.addToPrincipalPolicy(s3Policy)
+    */
+
+    // Give Lambda function, which save ELIF data, write access to DynamoDB table and read access to S3 bucket
+    myTable.grantWriteData(saveMetadataFunction.grantPrincipal)
+    myBucket.grantRead(saveMetadataFunction.grantPrincipal)
 
     // Lambda function that:
     // 1. Calls Amazon Rekognition to detect objects in the image file
@@ -104,15 +108,21 @@ export class ImageRecogStack extends cdk.Stack {
     });
 
     // Add policy to Lambda function so it can call
-    // PutItem on table.
+    // UpdateItem on table.
+    // Do we need to add rekognition.DetectLabels???
+    /*
     const dbPolicy = new iam.PolicyStatement({
-      sid: "doc-example-s3-statement",
-      actions: ["dynamodb:PutItem"],
+      sid: "docexampledbstatement",
+      actions: ["dynamodb:UpdateItem"],
       effect: Effect.ALLOW,
       resources: [myTable.tableArn + "/*"],
     })
 
     saveObjectDataFunction.role?.addToPrincipalPolicy(dbPolicy)
+    */
+
+    // Give Lambda function, which saves Rekognition data, write access to DynamoDB table
+    myTable.grantWriteData(saveObjectDataFunction.grantPrincipal)
 
     // Lambda function that:
     // 1. Gets the photo from S3
@@ -126,29 +136,19 @@ export class ImageRecogStack extends cdk.Stack {
 
     // Add policy to Lambda function so it can call
     // GetObject and PutObject on bucket.
+    /*
     const s32Policy = new iam.PolicyStatement({
-      sid: "doc-example-s3-statement",
+      sid: "docexamples3statement",
       actions: ["s3:GetObject", "s3:PutObject"],
       effect: Effect.ALLOW,
       resources: [myBucket.bucketArn + "/*"],
     })
 
     createThumbnailFunction.role?.addToPrincipalPolicy(s32Policy)
-
-
-
-    // Create Lambda function to get status of uploaded data for state machine
-    /*
-    const getStatusLambda = new lambda.Function(this, 'doc-example-get-status', {
-      runtime: lambda.Runtime.GO_1_X,
-      handler: 'main',
-      code: new lambda.AssetCode('src/get_status'), // Go source file is (relative to cdk.json): src/get_status/main.go
-      environment: {
-        tableName: myTable.tableName,
-      },
-    });
     */
 
+    // Give Lambda function, which creates a thumbnail, read/write access to S3 bucket
+    myBucket.grantReadWrite(createThumbnailFunction.grantPrincipal)
 
     // First task: save metadata from photo in S3 bucket to DynamoDB table
     const saveMetadataJob = new tasks.LambdaInvoke(this, 'Save Metadata Job', {
@@ -171,65 +171,25 @@ export class ImageRecogStack extends cdk.Stack {
       outputPath: '$.Payload',
     });
 
-    /*
-    const waitX = new sfn.Wait(this, 'Wait X Seconds', {
-      time: sfn.WaitTime.duration(cdk.Duration.seconds(5))       //.secondsPath('$.Payload.waitSeconds'),
-    });
-
-    const getStatus = new tasks.LambdaInvoke(this, 'Get Job Status', {
-      lambdaFunction: getStatusLambda,
-      inputPath: '$.guid',
-      outputPath: '$.status',
-    });
-
-    const jobFailed = new sfn.Fail(this, 'Job Failed', {
-      cause: 'AWS Batch Job Failed',
-      error: 'DescribeJob returned FAILED',
-    });
-
-    const finalStatus = new tasks.LambdaInvoke(this, 'Get Final Job Status', {
-      lambdaFunction: getStatusLambda,
-      inputPath: '$.guid',
-      outputPath: '$.status',
-    });
-    */
-
     // Create state machine with one task, submitJob
     const definition = saveMetadataJob
       .next(saveObjectDataJob)
       .next(createThumbnailJob)
-    //      .next(waitX)
-    //      .next(getStatus)
-    //      .next(new sfn.Choice(this, 'Job Complete?')
-    // Look at the "status" field
-    //        .when(sfn.Condition.stringEquals('$.status', 'FAILED'), jobFailed)
-    //        .when(sfn.Condition.stringEquals('$.status', 'SUCCEEDED'), finalStatus)
-    //        .otherwise(waitX));
+
+    // Create log group:
+    const myLogGroup = new logs.LogGroup(this, 'MyLogGroup');
 
     const myStateMachine = new sfn.StateMachine(this, 'StateMachine', {
       definition,
+      logs: {
+        destination: myLogGroup,
+        level: sfn.LogLevel.ALL,
+      },
       timeout: cdk.Duration.minutes(5),
     });
 
-    // Send S3 events to Step Functions state machine
-    //   rule.addTarget(new targets.SfnStateMachine(myStateMachine));
-
-    /*
-    // Create role for Lambda function to call Step Functions
-    const stepFuncRole = new iam.Role(this, 'doc-example-stepfunc-role', {
-      roleName: 'doc-example-stepfunc',
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
-    });
-
-    // Let Lambda function call these Step Function operations
-    stepFuncRole.addToPolicy(new iam.PolicyStatement({
-      actions: ["???", ""],
-      effect: iam.Effect.ALLOW,
-      resources: [],
-    }))
-    */
-
     // Create role for Lambda function to call DynamoDB
+    /*
     const dynamoDbRole = new iam.Role(this, 'doc-example-dynamodb-role', {
       roleName: 'doc-example-dynamodb',
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
@@ -243,34 +203,29 @@ export class ImageRecogStack extends cdk.Stack {
         'dynamodb:PutItem'
       ]
     }));
-
-    /*
-    dynamoDbRole.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName(
-        'service-role/AWSLambdaBasicExecutionRole'));
     */
-
-    // Configure Amazon S3 bucket to send notification events to step functions.
-    // myBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new nots.LambdaDestination(getMetadataFunction));
-
 
     // Display info about the resources.
     // You can see this information at any time by running:
-    //   aws cloudformation describe-stacks --stack-name ImageRecogStack --query Stacks[0].Outputs --output text
+    //   aws cloudformation describe-stacks --stack-name ImageStack --query Stacks[0].Outputs --output text
     new cdk.CfnOutput(this, 'Bucket name: ', { value: myBucket.bucketName });
 
     new cdk.CfnOutput(this, 'Save metadata function: ', { value: saveMetadataFunction.functionName });
     new cdk.CfnOutput(this, 'Save object data function: ', { value: saveObjectDataFunction.functionName });
     new cdk.CfnOutput(this, 'Create thumbnail function: ', { value: createThumbnailFunction.functionName });
 
-    new cdk.CfnOutput(this, 'S3 function CloudWatch log group: ', { value: saveMetadataFunction.logGroup.logGroupName });
+    new cdk.CfnOutput(this, 'CloudTrail trail ARN: ', { value: myTrail.trailArn });
 
-    // new cdk.CfnOutput(this, 'Status function: ', { value: getStatusLambda.functionName });
+    new cdk.CfnOutput(this, 'Cloudwatch log group: ', { value: myLogGroup.logGroupName })
+
+    new cdk.CfnOutput(this, 'Save ELIF data function CloudWatch log group: ', { value: saveMetadataFunction.logGroup.logGroupName });
+    new cdk.CfnOutput(this, 'Save Rekognition function CloudWatch log group: ', { value: saveObjectDataFunction.logGroup.logGroupName });
+    new cdk.CfnOutput(this, 'Create thumbnail function CloudWatch log group: ', { value: createThumbnailFunction.logGroup.logGroupName });
+
     new cdk.CfnOutput(this, 'Table name: ', { value: myTable.tableName });
-
     new cdk.CfnOutput(this, 'State machine: ', { value: myStateMachine.stateMachineName });
   }
 }
 
 const app = new cdk.App();
-new ImageRecogStack(app, 'ImageRecogStack');
+new ImageStack(app, 'ImageStack');

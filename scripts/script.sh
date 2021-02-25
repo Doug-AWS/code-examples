@@ -1,7 +1,7 @@
 TestGoFile () {
     if [ "$1" == "" ]
     then
-       return
+       return 0
     fi
 
     pushd $1

@@ -11,20 +11,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-func verbosePrint(v bool, s string) {
-	if v {
-		fmt.Println(s)
-	}
+// PPSendVoiceMessageAPI defines the interface for the SendVoiceMessage function.
+// We use this interface to test the function using a mocked service.
+type PPSendVoiceMessageAPI interface {
+	SendVoiceMessage(ctx context.Context,
+		params *pinpointsmsvoice.SendVoiceMessageInput,
+		optFns ...func(*pinpointsmsvoice.Options)) (*pinpointsmsvoice.SendVoiceMessageOutput, error)
+}
+
+// SendMsg sends an Amazon Pinpoint SMS message.
+// Inputs:
+//     c is the context of the method call, which includes the AWS Region
+//     api is the interface that defines the method call
+//     input defines the input arguments to the service call.
+// Output:
+//     If success, a SendVoiceMessageOutput object containing the result of the service call and nil.
+//     Otherwise, nil and an error from the call to SendVoiceMessage.
+func SendMsg(c context.Context, api PPSendVoiceMessageAPI, input *pinpointsmsvoice.SendVoiceMessageInput) (*pinpointsmsvoice.SendVoiceMessageOutput, error) {
+	return api.SendVoiceMessage(c, input)
 }
 
 func main() {
 	sourceNumber := flag.String("s", "", "The phone number that appears on recipients' devices when they receive the message")
 	destinationNumber := flag.String("d", "", "The phone number that you want to send the voice message to")
-	// originNumber := flag.String("o", "", "The phone number that Amazon Pinpoint should use to send the voice message") // Should this be the same as sourceNumber???
-	// configName := flag.String("c", "", "The name of the configuration set that you want to use to send the message")
-	// text := flag.String("t", "", "The text of the message to send")
 
-	verbose := flag.Bool("v", false, "Whether to barf out more info")
 	flag.Parse()
 
 	if *sourceNumber == "" || *destinationNumber == "" {
@@ -33,8 +43,6 @@ func main() {
 		return
 	}
 
-	verbosePrint(*verbose, "Verbose enabled")
-
 	// (import "github.com/aws/aws-sdk-go-v2/config")
 	cfg, err := config.LoadDefaultConfig()
 	if err != nil {
@@ -42,18 +50,6 @@ func main() {
 	}
 
 	client := pinpointsmsvoice.NewFromConfig(cfg)
-
-	/*
-		callInstructionsMessage := types.CallInstructionsMessageType{
-			Text: aws.String("en-US"), // From Polly language topic https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
-		}
-
-		plainTextMessage := types.PlainTextMessageType{
-			LanguageCode: aws.String("en-US"), // Can this be different from the previous value?
-			Text:         text,
-			VoiceId:      aws.String("Joey"),
-		}
-	*/
 
 	sSMLMessage := &types.SSMLMessageType{
 		LanguageCode: aws.String("en-US"), // Can this be different from the previous value?
@@ -80,12 +76,7 @@ func main() {
 		OriginationPhoneNumber: sourceNumber,
 	}
 
-	result, err := client.SendVoiceMessage(context.Background(), input)
-	if err != nil {
-		fmt.Println("Got an error calling SendVoiceMessage:")
-		fmt.Println(err)
-		return
-	}
+	result, err := SendMsg(context.TODO(), client, input)
 
 	fmt.Println("Message ID: " + *result.MessageId)
 

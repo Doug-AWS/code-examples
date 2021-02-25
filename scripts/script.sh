@@ -25,5 +25,10 @@ for f in $@ ; do
 
     # If it's a go test file
     # test it
-    [[ $file =~ ^[a-zA-Z]*_test.go$ ]] && TestGoFile "$path"
+    if [ "$file" == "^[a-zA-Z]*_test.go$" ]
+    then
+	    TestGoFile "$path"
+    else
+	    echo 0
+    fi
 done

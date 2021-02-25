@@ -6,12 +6,15 @@ import * as s3 from '@aws-cdk/aws-s3';
 import * as cloudtrail from '@aws-cdk/aws-cloudtrail';
 // import * as cw from '@aws-cdk/aws-cloudwatch';
 import * as events from '@aws-cdk/aws-events';
+import * as targets from '@aws-cdk/aws-events-targets';
 // import * as iam from '@aws-cdk/aws-iam';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as logs from '@aws-cdk/aws-logs';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as sfn from '@aws-cdk/aws-stepfunctions';
 import * as tasks from '@aws-cdk/aws-stepfunctions-tasks';
+import { Duration } from '@aws-cdk/core';
+import { Chain } from '@aws-cdk/aws-stepfunctions';
 // import { Effect } from '@aws-cdk/aws-iam';
 
 export class ImageStack extends cdk.Stack {
@@ -22,33 +25,8 @@ export class ImageStack extends cdk.Stack {
     const inPrefix = "uploads"
     const thumbPrefix = "thumbs"
 
-    /* Use bucket event to execute a step function when an item uploaded to a bucket
-     *   https://docs.aws.amazon.com/step-functions/latest/dg/tutorial-cloudwatch-events-s3.html
-     *
-     * 1: Create a bucket (Amazon S3)
-     * 2: Create a trail (AWS CloudTrail)
-     * 3: Create an events rule (AWS CloudWatch Events)
-     */
-
     // Create Amazon Simple Storage Service (Amazon S3) bucket
     const myBucket = new s3.Bucket(this, 'doc-example-bucket');
-
-    // Create trail to watch for events from bucket
-    const myTrail = new cloudtrail.Trail(this, 'doc-example-trail');
-    // Add an event selector to the trail so that
-    // JPG or PNG files with 'uploads/' prefix
-    // added to bucket are detected
-    myTrail.addS3EventSelector([{
-      bucket: myBucket,
-      objectPrefix: inPrefix + '/',
-    },]);
-
-    // Create events rule
-    const myRule = new events.Rule(this, 'rule', {
-      eventPattern: {
-        source: ['aws.s3'],
-      },
-    });
 
     // Create DynamoDB table for Lambda function to persist image info
     // Create Amazon DynamoDB table with primary key path (string)
@@ -134,58 +112,88 @@ export class ImageStack extends cdk.Stack {
       code: new lambda.AssetCode('src/create_thumbnail'), // Go source file is (relative to cdk.json): src/create_thumbnail/main.go
     });
 
-    // Add policy to Lambda function so it can call
-    // GetObject and PutObject on bucket.
-    /*
-    const s32Policy = new iam.PolicyStatement({
-      sid: "docexamples3statement",
-      actions: ["s3:GetObject", "s3:PutObject"],
-      effect: Effect.ALLOW,
-      resources: [myBucket.bucketArn + "/*"],
-    })
-
-    createThumbnailFunction.role?.addToPrincipalPolicy(s32Policy)
-    */
-
     // Give Lambda function, which creates a thumbnail, read/write access to S3 bucket
     myBucket.grantReadWrite(createThumbnailFunction.grantPrincipal)
 
     // First task: save metadata from photo in S3 bucket to DynamoDB table
     const saveMetadataJob = new tasks.LambdaInvoke(this, 'Save Metadata Job', {
       lambdaFunction: saveMetadataFunction,
-      //inputPath: '$', // Event from S3 notification (default)
-      outputPath: '$.Payload',
+      inputPath: '$',
+      outputPath: '$',
     });
 
     // Second task: save image data from Rekognition to DynamoDB table
     const saveObjectDataJob = new tasks.LambdaInvoke(this, 'Save Object Data Job', {
       lambdaFunction: saveObjectDataFunction,
-      inputPath: '$.Payload',
-      outputPath: '$.Payload',
+      inputPath: '$',
+      outputPath: '$',
     });
 
     // Final task: create thumbnail of photo in S3 bucket
     const createThumbnailJob = new tasks.LambdaInvoke(this, 'Create Thumbnail Job', {
       lambdaFunction: createThumbnailFunction,
-      inputPath: '$.Payload',
-      outputPath: '$.Payload',
+      inputPath: '$',
+      outputPath: '$',
     });
 
-    // Create state machine with one task, submitJob
-    const definition = saveMetadataJob
+    //    const waitX = new sfn.Wait(this, 'Wait 5 Seconds', {
+    //      time: sfn.WaitTime.secondsPath('$.waitSeconds'),
+    //    });
+
+
+    /* Configure a state machine as a target for a CloudWatch Events rule. 
+       This will start an execution when files are added to an Amazon S3 bucket.
+
+       Steps:
+
+       1. Create a state machine
+       2. Create an Amazon S3 bucket
+       3. Create an AWS CloudTrail trail
+       4. Create a CloudWatch events rule
+    */
+
+    const chain = Chain.start(saveMetadataJob)
       .next(saveObjectDataJob)
       .next(createThumbnailJob)
 
+    /*
+    const definition = saveMetadataJob
+      //    .next(waitX)
+      .next(saveObjectDataJob)
+      //    .next(waitX)
+      .next(createThumbnailJob)
+*/
     // Create log group:
     const myLogGroup = new logs.LogGroup(this, 'MyLogGroup');
 
     const myStateMachine = new sfn.StateMachine(this, 'StateMachine', {
-      definition,
+      definition: chain,
       logs: {
         destination: myLogGroup,
         level: sfn.LogLevel.ALL,
       },
+      // timeout: Duration.minutes(5),
       // timeout: cdk.Duration.minutes(5),
+    });
+
+    // Create trail to watch for events from bucket
+    const s3EventTrail = new cloudtrail.Trail(this, 'doc-example-S3Event-trail', {
+      sendToCloudWatchLogs: true,
+    });
+    // Add an event selector to the trail to
+    // detect when objects with 'uploads/' prefix
+    // are added to the bucket
+    s3EventTrail.addS3EventSelector([{
+      bucket: myBucket,
+      objectPrefix: inPrefix + '/',
+    },]);
+
+    // Create events rule
+    const myRule = new events.Rule(this, 'rule', {
+      eventPattern: {
+        source: ['aws.s3'],
+      },
+      targets: [new targets.SfnStateMachine(myStateMachine)],
     });
 
     // Display info about the resources.
@@ -197,7 +205,7 @@ export class ImageStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'Save object data function: ', { value: saveObjectDataFunction.functionName });
     new cdk.CfnOutput(this, 'Create thumbnail function: ', { value: createThumbnailFunction.functionName });
 
-    new cdk.CfnOutput(this, 'CloudTrail trail ARN: ', { value: myTrail.trailArn });
+    new cdk.CfnOutput(this, 'CloudTrail trail ARN: ', { value: s3EventTrail.trailArn });
 
     new cdk.CfnOutput(this, 'Cloudwatch log group: ', { value: myLogGroup.logGroupName })
 

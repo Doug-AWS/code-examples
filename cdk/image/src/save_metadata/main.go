@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -20,6 +20,71 @@ import (
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/rwcarlsen/goexif/tiff"
 )
+
+/*
+type myRequestParameters struct {
+	BucketName string `json:"bucketName"`
+	Host       string `json:"Host"`
+	Key        string `json:"key"`
+	XID        string `json:"x-id"`
+}
+*/
+
+// RawEvent sent to step function and passed to Lambda function
+type RawEvent struct {
+	Version    string        `json:"version"`
+	ID         string        `json:"id"`
+	DetailType string        `json:"detail-type"`
+	Source     string        `json:"source"`
+	Account    string        `json:"account"`
+	Time       time.Time     `json:"time"`
+	Region     string        `json:"region"`
+	Resources  []interface{} `json:"resources"`
+	Detail     struct {
+		EventVersion string `json:"eventVersion"`
+		UserIdentity struct {
+			Type        string `json:"type"`
+			PrincipalID string `json:"principalId"`
+			Arn         string `json:"arn"`
+			AccountID   string `json:"accountId"`
+			AccessKeyID string `json:"accessKeyId"`
+			UserName    string `json:"userName"`
+		} `json:"userIdentity"`
+		EventTime         time.Time `json:"eventTime"`
+		EventSource       string    `json:"eventSource"`
+		EventName         string    `json:"eventName"`
+		AwsRegion         string    `json:"awsRegion"`
+		SourceIPAddress   string    `json:"sourceIPAddress"`
+		UserAgent         string    `json:"userAgent"`
+		RequestParameters struct {
+			BucketName string `json:"bucketName"`
+			Host       string `json:"Host"`
+			Key        string `json:"key"`
+			XID        string `json:"x-id"`
+		} `json:"requestParameters"`
+		ResponseElements    interface{} `json:"responseElements"`
+		AdditionalEventData struct {
+			SignatureVersion     string  `json:"SignatureVersion"`
+			CipherSuite          string  `json:"CipherSuite"`
+			BytesTransferredIn   float64 `json:"bytesTransferredIn"`
+			AuthenticationMethod string  `json:"AuthenticationMethod"`
+			XAmzID2              string  `json:"x-amz-id-2"`
+			BytesTransferredOut  float64 `json:"bytesTransferredOut"`
+		} `json:"additionalEventData"`
+		RequestID string `json:"requestID"`
+		EventID   string `json:"eventID"`
+		ReadOnly  bool   `json:"readOnly"`
+		Resources []struct {
+			Type      string `json:"type"`
+			ARN       string `json:"ARN"`
+			AccountID string `json:"accountId,omitempty"`
+		} `json:"resources"`
+		EventType          string `json:"eventType"`
+		ManagementEvent    bool   `json:"managementEvent"`
+		RecipientAccountID string `json:"recipientAccountId"`
+		EventCategory      string `json:"eventCategory"`
+	} `json:"detail"`
+}
 
 type item map[string]types.AttributeValue
 
@@ -166,36 +231,51 @@ func saveMetadata(bucket string, key string, table string) error {
 
 	return err
 }
-func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
-	numEvents := len(s3Event.Records)
 
-	if numEvents < 1 {
-		return "", errors.New("Save metadata function got an empty S3 event")
-	}
+func handler(ctx context.Context, myEvent RawEvent) (string, error) {
+	fmt.Println("Got raw event:")
+	fmt.Println(myEvent)
 
-	fmt.Println("Got event in save ELIF data handler:")
-	fmt.Println(s3Event)
+	// Get bucket name and key and save as environment variables
+	bucketName := myEvent.Detail.RequestParameters.BucketName
+	key := myEvent.Detail.RequestParameters.Key
 
-	s3 := s3Event.Records[0].S3
+	os.Setenv("bucketName", bucketName)
+	os.Setenv("keyName", key)
+
+	bName := os.Getenv("bucketName")
+	kName := os.Getenv("keyName")
+
+	fmt.Println("Saved bucket name '" + bName + "' as environment variable")
+	fmt.Println("Saved key name    '" + kName + "' as environment variable")
 
 	// Get table name from environment
 	table := os.Getenv("tableName")
 
-	err := saveMetadata(s3.Bucket.Name, s3.Object.Key, table)
+	fmt.Println("Got table name '" + table + "' from environment variable")
+
+	err := saveMetadata(bucketName, key, table)
 	if err != nil {
-		msg := "Got error saving metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "':"
+		msg := "Got error saving metadata from key '" + key + "' in bucket '" + bucketName + "':"
 		fmt.Println(msg)
 		fmt.Println(err)
 
 		return "", err
 	}
 
-	msg := "Saved metadata from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "'"
+	msg := "Saved metadata from key '" + key + "' in bucket '" + bucketName + "':"
 	fmt.Println(msg)
 
-	output := "{ \"Bucket\": " + s3.Bucket.Name + ", \"Key\": " + s3.Object.Key + " }"
+	output := "{ \"Bucket\": \"" + bucketName + "\", \"Key\": \"" + key + "\", \"waitTimeout\": 5 }"
+
 	fmt.Println("Returning: ")
 	fmt.Println(output)
+	// fmt.Println(myEvent.Resources)
+
+	// output, err := json.Marshal(&myEvent.Resources)
+	// if err != nil {
+	//   	return "", err
+	// }
 
 	return output, nil
 }

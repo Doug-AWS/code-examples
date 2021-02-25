@@ -6,27 +6,35 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
+	"math"
+	"os"
 	"strconv"
 	"strings"
 
-	//"encoding/json"
-
-	//"image"
-	//_ "image/gif"
-	//"image/jpeg"
-	//_ "image/jpeg"
-	"image/jpeg"
-	"image/png"
-	"math"
-
 	"github.com/nfnt/resize"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
+
+// MyRequestParameters is the event we receive
+type MyRequestParameters struct {
+	BucketName string `json:"bucketName"`
+	Host       string `json:"Host"`
+	Key        string `json:"key"`
+	XID        string `json:"x-id"`
+}
+
+/* MyEvent defines the event we get
+type MyEvent struct {
+	Bucket string `json:"Bucket"`
+	Key    string `json:"Key"`
+}
+*/
 
 func calculateRatioFit(srcWidth, srcHeight int, maxWidth, maxHeight float64) (int, int) {
 	ratio := math.Min(maxWidth/float64(srcWidth), maxHeight/float64(srcHeight))
@@ -152,24 +160,50 @@ func makeThumbnail(bucket, key string) (string, error) {
 	return name, err
 }
 
-func handler(ctx context.Context, s3Event events.S3Event) (string, error) {
-	fmt.Println("Got event in create thumbmail handler:")
-	fmt.Println(s3Event)
+// func handler(ctx context.Context, event MyEvent) (string, error) {
+// func handler(ctx context.Context, myEvent MyRequestParameters) (string, error) {
+func handler(ctx context.Context, myEvent MyRequestParameters) error {
+	// Get bucket and key names from environment
+	bucketName := os.Getenv("bucketName")
+	keyName := os.Getenv("keyName")
 
-	s3 := s3Event.Records[0].S3
-	savedObject, err := makeThumbnail(s3.Bucket.Name, s3.Object.Key)
+	if bucketName == "" || keyName == "" {
+		msg := "Did not get bucket and key"
+		return errors.New(msg)
+	}
+
+	fmt.Print("Got bucket name '" + bucketName + "' from environment variable")
+	fmt.Print("Got key name    '" + bucketName + "' from environment variable")
+
+	//	fmt.Println("Got event in create thumbmail handler:")
+	//	fmt.Println(myEvent)
+
+	//	savedObject, err := makeThumbnail(myEvent.BucketName, myEvent.Key)
+	savedObject, err := makeThumbnail(bucketName, keyName)
 	if err != nil {
-		msg := "Got error creating thumbnail from key '" + s3.Object.Key + "' in bucket '" + s3.Bucket.Name + "':"
+		msg := "Got error creating thumbnail from key '" + myEvent.Key + "' in bucket '" + myEvent.BucketName + "':"
 		fmt.Println(msg)
 		fmt.Println(err)
 
+		return /*"",*/ err
+	}
+
+	msg := "Created thumbnail '" + savedObject + "' in bucket '" + /*myEvent.BucketName*/ bucketName + "'"
+	fmt.Println(msg)
+
+	//return "{ \"bucket\": " + event.Bucket + ", \"key\": " + savedObject + " }", nil
+
+	/* fmt.Println("Returning: ")
+	   fmt.Println(myEvent)
+
+	output, err := json.Marshal(&myEvent)
+	if err != nil {
 		return "", err
 	}
 
-	msg := "Created thumbnail '" + savedObject + "' in bucket '" + s3.Bucket.Name + "'"
-	fmt.Println(msg)
-
-	return "{ \"bucket\": " + s3.Bucket.Name + ", \"key\": " + savedObject + " }", nil
+	return string(output), nil
+	*/
+	return nil
 }
 
 func main() {

@@ -1,0 +1,60 @@
+{
+  "version": "0",
+  "id": "46ea38ef-abba-641c-5ed5-2e3c823883a8",
+  "detail-type": "AWS API Call via CloudTrail",
+  "source": "aws.s3",
+  "account": "188580781645",
+  "time": "2021-02-24T22:40:06Z",
+  "region": "us-west-2",
+  "resources": [],
+  "detail": {
+    "eventVersion": "1.08",
+    "userIdentity": {
+      "type": "IAMUser",
+      "principalId": "AIDAJU2OPZTP4UXCWHZOO",
+      "arn": "arn:aws:iam::188580781645:user/dougsch",
+      "accountId": "188580781645",
+      "accessKeyId": "AKIASX2CKLZGYM6DVYVP",
+      "userName": "dougsch"
+    },
+    "eventTime": "2021-02-24T22:40:06Z",
+    "eventSource": "s3.amazonaws.com",
+    "eventName": "PutObject",
+    "awsRegion": "us-west-2",
+    "sourceIPAddress": "205.251.233.55",
+    "userAgent": "[aws-sdk-go-v2/1.2.0]",
+    "requestParameters": {
+      "bucketName": "imagestack-docexamplebucket34a03655-1974lr4cadel5",
+      "Host": "imagestack-docexamplebucket34a03655-1974lr4cadel5.s3.us-west-2.amazonaws.com",
+      "key": "uploads/DonaldTrumpTheLemmingLeader.jpg",
+      "x-id": "PutObject"
+    },
+    "responseElements": null,
+    "additionalEventData": {
+      "SignatureVersion": "SigV4",
+      "CipherSuite": "ECDHE-RSA-AES128-GCM-SHA256",
+      "bytesTransferredIn": 77370,
+      "AuthenticationMethod": "AuthHeader",
+      "x-amz-id-2": "aNb9eaC1tO2PYMiqNAknSitO2PciESyq/498fmwMT5SuTjsSR6wGAj9CUqg3Qeij146gvFAbAsU=",
+      "bytesTransferredOut": 0
+    },
+    "requestID": "8TK17R6C46NN7HZ9",
+    "eventID": "8fc9050d-3ae3-444e-9b40-991794e262d0",
+    "readOnly": false,
+    "resources": [
+      {
+        "type": "AWS::S3::Object",
+        "ARN": "arn:aws:s3:::imagestack-docexamplebucket34a03655-1974lr4cadel5/uploads/DonaldTrumpTheLemmingLeader.jpg"
+      },
+      {
+        "accountId": "188580781645",
+        "type": "AWS::S3::Bucket",
+        "ARN": "arn:aws:s3:::imagestack-docexamplebucket34a03655-1974lr4cadel5"
+      }
+    ],
+    "eventType": "AwsApiCall",
+    "managementEvent": false,
+    "recipientAccountId": "188580781645",
+    "eventCategory": "Data"
+  }
+}

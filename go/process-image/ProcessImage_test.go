@@ -24,13 +24,10 @@ func (dt RekognitionDetectLabelsImpl) DetectLabels(ctx context.Context,
 	labels[1] = types.Label{Name: aws.String("aws-doc-example-label2"), Confidence: aws.Float32(float32(0.4))}
 
 	output := &rekognition.DetectLabelsOutput{
-		//		LabelModelVersion:     new(string),
 		Labels: labels,
-		//		OrientationCorrection: "",
-		//		ResultMetadata:        rTypes.middleware.Metadata{},
 	}
 
-	return output, errors.New("Fake error")
+	return output, errors.New("New fake error")
 }
 
 type Config struct {
@@ -56,7 +53,7 @@ func populateConfiguration() error {
 	}
 
 	if globalConfig.Bucket == "" || globalConfig.Key == "" {
-		msg := "You musts supply a value for BucketName and KeyName in " + configFileName
+		msg := "You must supply a value for BucketName and KeyName in " + configFileName
 		return errors.New(msg)
 	}
 

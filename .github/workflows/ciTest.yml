@@ -30,8 +30,4 @@ jobs:
       - id: files
         uses: jitterbit/get-changed-files@v1
       - run: |
-          # make file runnable, might not be necessary
-          chmod +x scripts/script.sh
-
-          # run script
           scripts/script.sh ${{ steps.files.outputs.all }}

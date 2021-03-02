@@ -27,7 +27,7 @@ func (dt RekognitionDetectLabelsImpl) DetectLabels(ctx context.Context,
 		Labels: labels,
 	}
 
-	return output, errors.New("ERROR!!!")
+	return output, errors.New("error from doug-delete branch")
 }
 
 type Config struct {

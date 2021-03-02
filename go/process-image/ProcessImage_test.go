@@ -27,7 +27,7 @@ func (dt RekognitionDetectLabelsImpl) DetectLabels(ctx context.Context,
 		Labels: labels,
 	}
 
-	return output, errors.New("New fake error")
+	return output, errors.New("ERROR!!!")
 }
 
 type Config struct {

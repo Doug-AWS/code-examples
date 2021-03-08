@@ -1,0 +1,23 @@
+{
+    "TableName": "CodeExamplesEntities",
+    "ServiceNamesDescription": "The list of services for which we can create entities; use the list from https://docs.aws.amazon.com/cli/latest/reference/#available-services",
+    "ServiceNames": [
+        "sns"
+    ],
+    "SdkNamesDescription": "The list of SDKs/languages we support, by filename extension",
+    "SdkNames": [
+        "cpp",
+        "cs",
+        "go",
+        "java",
+        "js",
+        "php",
+        "py",
+        "rb"
+    ],
+    "TargetsNamesDescription": "To help us generate separate entity lists for SDK dev guides, etc. We use catalog if we ever support links to the code catalog or its replacement",
+    "TargetNames": [
+        "guide",
+        "catalog"
+    ]
+}

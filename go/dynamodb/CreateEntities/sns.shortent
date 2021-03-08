@@ -1,0 +1,13 @@
+CheckIfPhoneNumberIsOptedOut js 
+CreateTopic go java js php rb 
+DeleteTopic java js php 
+GetSMSAttributes js 
+GetTopicAttributes js php 
+ListPhoneNumbersOptedOut js 
+ListSubscriptions go js rb 
+ListTopics go java js php rb 
+Publish go java js js rb 
+SetSMSAttributes js rb 
+SetTopicAttributes js php 
+Subscribe go java js rb 
+Unsubscribe java js 

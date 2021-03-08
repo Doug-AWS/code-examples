@@ -1,0 +1,246 @@
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-sending-sms.html#sending-sms-checkifphonenumberisoptedout
+Service: sns
+SDK:     js
+Target:  guide
+Action:  CheckIfPhoneNumberIsOptedOut
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-managing-topics.html#sns-examples-managing-topics-createtopic
+Service: sns
+SDK:     js
+Target:  guide
+Action:  CreateTopic
+
+Path:    https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html#sns-create-topic
+Service: sns
+SDK:     java
+Target:  guide
+Action:  CreateTopic
+
+Path:    https://docs.aws.amazon.com/sdk-for-ruby/v3/developer-guide/sns-example-create-topic.html
+Service: sns
+SDK:     rb
+Target:  guide
+Action:  CreateTopic
+
+Path:    https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/sns-examples-managing-topics.html#create-a-topic
+Service: sns
+SDK:     php
+Target:  guide
+Action:  CreateTopic
+
+Path:    https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/createtopic/
+Service: sns
+SDK:     go
+Target:  guide
+Action:  CreateTopic
+
+Path:    https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html#sns-delete-topic
+Service: sns
+SDK:     java
+Target:  guide
+Action:  DeleteTopic
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-managing-topics.html#sns-examples-managing-topics-deletetopic
+Service: sns
+SDK:     js
+Target:  guide
+Action:  DeleteTopic
+
+Path:    https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/sns-examples-managing-topics.html#delete-a-topic
+Service: sns
+SDK:     php
+Target:  guide
+Action:  DeleteTopic
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-sending-sms.html#sending-sms-getattributes
+Service: sns
+SDK:     js
+Target:  guide
+Action:  GetSMSAttributes
+
+Path:    https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/sns-examples-managing-topics.html#get-topic-attributes
+Service: sns
+SDK:     php
+Target:  guide
+Action:  GetTopicAttributes
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-managing-topics.html#sns-examples-managing-topicsgetttopicattributes
+Service: sns
+SDK:     js
+Target:  guide
+Action:  GetTopicAttributes
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-sending-sms.html#sending-sms-listphonenumbersoptedout
+Service: sns
+SDK:     js
+Target:  guide
+Action:  ListPhoneNumbersOptedOut
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-subscribing-unubscribing-topics.html#sns-examples-list-subscriptions-email
+Service: sns
+SDK:     js
+Target:  guide
+Action:  ListSubscriptions
+
+Path:    https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/listsubscriptions/
+Service: sns
+SDK:     go
+Target:  guide
+Action:  ListSubscriptions
+
+Path:    https://docs.aws.amazon.com/sdk-for-ruby/v3/developer-guide/sns-example-show-subscriptions.html
+Service: sns
+SDK:     rb
+Target:  guide
+Action:  ListSubscriptions
+
+Path:    https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html#sns-crelistate-topics
+Service: sns
+SDK:     java
+Target:  guide
+Action:  ListTopics
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-managing-topics.html#sns-examples-managing-topics-listtopics
+Service: sns
+SDK:     js
+Target:  guide
+Action:  ListTopics
+
+Path:    https://docs.aws.amazon.com/sdk-for-ruby/v3/developer-guide/sns-example-show-topics.html
+Service: sns
+SDK:     rb
+Target:  guide
+Action:  ListTopics
+
+Path:    https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/sns-examples-managing-topics.html#list-your-topics
+Service: sns
+SDK:     php
+Target:  guide
+Action:  ListTopics
+
+Path:    https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/listtopics/
+Service: sns
+SDK:     go
+Target:  guide
+Action:  ListTopics
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-sending-sms.html#sending-sms-publishsms
+Service: sns
+SDK:     js
+Target:  guide
+Action:  Publish
+
+Path:    https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html#sns-publish-message-topic
+Service: sns
+SDK:     java
+Target:  guide
+Action:  Publish
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-publishing-messages.html
+Service: sns
+SDK:     js
+Target:  guide
+Action:  Publish
+
+Path:    https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/publish/
+Service: sns
+SDK:     go
+Target:  guide
+Action:  Publish
+
+Path:    https://docs.aws.amazon.com/sdk-for-ruby/v3/developer-guide/sns-example-send-message.html
+Service: sns
+SDK:     rb
+Target:  guide
+Action:  Publish
+
+Path:    https://docs.aws.amazon.com/sdk-for-ruby/v3/developer-guide/sns-example-enable-resource.html
+Service: sns
+SDK:     rb
+Target:  guide
+Action:  SetSMSAttributes
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-sending-sms.html#sending-sms-setattributes
+Service: sns
+SDK:     js
+Target:  guide
+Action:  SetSMSAttributes
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-managing-topics.html#sns-examples-managing-topicsstttopicattributes
+Service: sns
+SDK:     js
+Target:  guide
+Action:  SetTopicAttributes
+
+Path:    https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/sns-examples-managing-topics.html#set-topic-attributes
+Service: sns
+SDK:     php
+Target:  guide
+Action:  SetTopicAttributes
+
+Path:    https://docs.aws.amazon.com/sdk-for-ruby/v3/developer-guide/sns-example-create-subscription.html
+Service: sns
+SDK:     rb
+Target:  guide
+Action:  Subscribe
+
+Path:    https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html#sns-subscribe-endpoint-topic
+Service: sns
+SDK:     java
+Target:  guide
+Action:  Subscribe
+
+Path:    https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/subscribe/
+Service: sns
+SDK:     go
+Target:  guide
+Action:  Subscribe
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-subscribing-unubscribing-topics.html#sns-examples-subscribing-email
+Service: sns
+SDK:     js
+Target:  guide
+Action:  Subscribe
+
+Path:    https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html#sns-unsubscribe-endpoint-topic
+Service: sns
+SDK:     java
+Target:  guide
+Action:  Unsubscribe
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples-subscribing-unubscribing-topics.html#sns-examples-unsubscribing
+Service: sns
+SDK:     js
+Target:  guide
+Action:  Unsubscribe
+
+Path:    https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/sns-examples.html
+Service: sns
+SDK:     js
+Target:  guide
+Action:  section
+
+Path:    https://docs.aws.amazon.com/sdk-for-ruby/v3/developer-guide/sns-examples.html
+Service: sns
+SDK:     rb
+Target:  guide
+Action:  section
+
+Path:    https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/sns-examples.html
+Service: sns
+SDK:     php
+Target:  guide
+Action:  section
+
+Path:    https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/
+Service: sns
+SDK:     go
+Target:  guide
+Action:  section
+
+Path:    https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html
+Service: sns
+SDK:     java
+Target:  guide
+Action:  section
+

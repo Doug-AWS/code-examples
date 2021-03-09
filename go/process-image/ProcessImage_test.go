@@ -27,7 +27,7 @@ func (dt RekognitionDetectLabelsImpl) DetectLabels(ctx context.Context,
 		Labels: labels,
 	}
 
-	return output, errors.New("dummy")
+	return output, nil
 }
 
 type Config struct {

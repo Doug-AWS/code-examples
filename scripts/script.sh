@@ -1,3 +1,5 @@
+i=0
+
 TestGoFile () {
     if [ "$1" == "" ]
     then
@@ -10,11 +12,9 @@ TestGoFile () {
 
 #    echo RESULT in TestGoFile: $RESULT
     
-    if [ "${RESULT[0]}" == "PASS" ]
+    if [ "${RESULT[0]}" != "PASS" ]
     then
-      echo 0
-    else
-      echo 1
+      ((i=i+1))
     fi
 
     popd
@@ -38,6 +38,7 @@ for f in $@ ; do
 	    ;;
         *)
 #    	    echo It is NOT a go test file
-            echo 0
     esac
 done
+
+return $i

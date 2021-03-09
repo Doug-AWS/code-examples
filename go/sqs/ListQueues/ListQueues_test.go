@@ -17,10 +17,8 @@ type mockSqsClient struct {
 }
 
 func (m *mockSqsClient) ListQueues(input *sqs.ListQueuesInput) (*sqs.ListQueuesOutput, error) {
-//    resp := sqs.ListQueuesOutput{}
-    _ = sqs.ListQueuesOutput()
-//    return &resp, nil
-    return nil, errors.New("error")
+    resp := sqs.ListQueuesOutput{}
+    return &resp, nil
 }
 
 func TestListQueues60(t *testing.T) {

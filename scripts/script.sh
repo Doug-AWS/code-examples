@@ -1,5 +1,3 @@
-i=0
-
 TestGoFile () {
     if [ "$1" == "" ]
     then
@@ -10,14 +8,14 @@ TestGoFile () {
 
     declare RESULT=(`go test`)  # (..) = array
 
+    popd
+    
 #    echo RESULT in TestGoFile: $RESULT
     
     if [ "${RESULT[0]}" != "PASS" ]
     then
-      ((i=i+1))
+      return 1
     fi
-
-    popd
 }
 
 for f in $@ ; do
@@ -40,5 +38,3 @@ for f in $@ ; do
 #    	    echo It is NOT a go test file
     esac
 done
-
-return $i

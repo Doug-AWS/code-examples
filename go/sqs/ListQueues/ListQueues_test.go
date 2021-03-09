@@ -3,6 +3,7 @@
 package main
 
 import (
+        "errors"
 	"testing"
 	"time"
 
@@ -16,8 +17,10 @@ type mockSqsClient struct {
 }
 
 func (m *mockSqsClient) ListQueues(input *sqs.ListQueuesInput) (*sqs.ListQueuesOutput, error) {
-	resp := sqs.ListQueuesOutput{}
-	return &resp, nil
+//    resp := sqs.ListQueuesOutput{}
+    _ = sqs.ListQueuesOutput()
+//    return &resp, nil
+    return nil, errors.New("error")
 }
 
 func TestListQueues60(t *testing.T) {

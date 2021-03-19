@@ -14,8 +14,9 @@ import (
 
 // Config stores the values from config.json
 type Config struct {
-	Table string `json:"TableName"`
-	Key   string `json:"KeyName"`
+	Table        string `json:"TableName"`
+	PartitionKey string `json:"PartitionKeyName"`
+	SortKey      string `json:"SortKeyName"`
 }
 
 var configFileName = "config.json"
@@ -35,8 +36,8 @@ func populateConfiguration() error {
 		return err
 	}
 
-	if globalConfig.Table == "" || globalConfig.Key == "" {
-		msg := "You musts supply a value for TableName and KeyName in " + configFileName
+	if globalConfig.Table == "" || globalConfig.PartitionKey == "" || globalConfig.SortKey == "" {
+		msg := "You musts supply a value for TableName, PartitionKeyName, SortKeyName in " + configFileName
 		return errors.New(msg)
 	}
 
@@ -64,22 +65,34 @@ func main() {
 	// Create attribute definitions
 	var attrs []types.AttributeDefinition
 
-	keyAttr := types.AttributeDefinition{
-		AttributeName: &globalConfig.Key,
+	partitionKeyAttr := types.AttributeDefinition{
+		AttributeName: &globalConfig.PartitionKey,
 		AttributeType: types.ScalarAttributeTypeS,
 	}
 
-	attrs = append(attrs, keyAttr)
+	sortKeyAttr := types.AttributeDefinition{
+		AttributeName: &globalConfig.SortKey,
+		AttributeType: types.ScalarAttributeTypeS,
+	}
+
+	attrs = append(attrs, partitionKeyAttr)
+	attrs = append(attrs, sortKeyAttr)
 
 	// Create key schema elements
 	var keySchemaElements []types.KeySchemaElement
 
-	keyElement := types.KeySchemaElement{
-		AttributeName: &globalConfig.Key,
+	partitionKeyElement := types.KeySchemaElement{
+		AttributeName: &globalConfig.PartitionKey,
 		KeyType:       "HASH",
 	}
 
-	keySchemaElements = append(keySchemaElements, keyElement)
+	sortKeyElement := types.KeySchemaElement{
+		AttributeName: &globalConfig.SortKey,
+		KeyType:       "RANGE",
+	}
+
+	keySchemaElements = append(keySchemaElements, partitionKeyElement)
+	keySchemaElements = append(keySchemaElements, sortKeyElement)
 
 	// Create table
 	input := &dynamodb.CreateTableInput{
@@ -94,5 +107,5 @@ func main() {
 		panic("failed to describe table, " + err.Error())
 	}
 
-	fmt.Println("Created " + globalConfig.Table + " with partition key " + globalConfig.Key)
+	fmt.Println("Created " + globalConfig.Table + " with partition key " + globalConfig.PartitionKey + " and sort key " + globalConfig.SortKey)
 }

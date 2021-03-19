@@ -1,0 +1,7 @@
+{
+    "RoleName": "AccessCodeExamplesEntities",
+    "TableARN": "arn:aws:dynamodb:us-west-2:188580781645:table/CodeExamplesEntities",
+    "Accounts": [
+        "164794437551"
+    ]
+}

@@ -1,4 +1,5 @@
 {
-    "TableName": "CodeExamplesEntities",
-    "KeyName": "path"
+    "TableName": "CodeExamplesEntries",
+    "PartitionKeyName": "path",
+    "SortKeyName": "action"
 }

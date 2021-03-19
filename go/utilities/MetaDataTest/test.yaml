@@ -1,0 +1,20 @@
+files:
+    - path: one/two
+      services:
+        - service: s3
+          actions:
+            - DoThis
+            - DoThat
+        - service: sns
+          actions:
+            - DidIt
+    - path: one/two
+      services:
+        - service: sqs
+          actions:
+            - DoSqsThis
+            - DoSqsThat
+        - service: sns
+          actions:
+            - SnsDidIt
+

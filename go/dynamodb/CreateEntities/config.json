@@ -1,5 +1,5 @@
 {
-    "TableName": "CodeExamplesEntities",
+    "TableName": "CodeExamplesEntries",
     "ServiceNamesDescription": "The list of services for which we can create entities; use the list from https://docs.aws.amazon.com/cli/latest/reference/#available-services",
     "ServiceNames": [
         "sns"

@@ -27,8 +27,9 @@ type Service struct {
 }
 
 type File struct {
-	Path     string    `yaml:"path"`
-	Services []Service `yaml:"services"`
+	Description string    `yaml:"description"`
+	Path        string    `yaml:"path"`
+	Services    []Service `yaml:"services"`
 }
 
 // Metadata caches the info in metadata.yaml
@@ -104,47 +105,47 @@ func addMetadataToTable(debug bool, filename string, tablename string, ext strin
 
 	client := dynamodb.NewFromConfig(cfg)
 
-	debugPrint(debug, "Found "+strconv.Itoa(len(metadata.Files))+"files:")
-
 	itemsAdded := 0
 
 	for _, f := range metadata.Files {
-		debugPrint(debug, "Path: "+f.Path)
-
-		debugPrint(debug, "Services:")
-
 		for _, s := range f.Services {
-			debugPrint(debug, "  "+s.Service)
-			debugPrint(debug, "  Actions:")
-
+			path := transmogrifyPath(debug, s.Service, f.Path)
 			for _, a := range s.Actions {
-				debugPrint(debug, "    "+a)
 				// Don't add actions that are "test"
 				if a != "test" {
-					service := s.Service
-					path := transmogrifyPath(debug, service, f.Path)
+					debugPrint(debug, "Path:        "+path)
+					debugPrint(debug, "Action:      "+a)
+					debugPrint(debug, "SDK:         "+ext)
+					debugPrint(debug, "Service:     "+s.Service)
+					debugPrint(debug, "Target:      "+target)
+					debugPrint(debug, "Description: "+f.Description)
+					debugPrint(debug, "")
 
 					// Create attributes for new table item
-					attrs := make(map[string]types.AttributeValue, 5)
+					attrs := make(map[string]types.AttributeValue, 6)
 
 					attrs["path"] = &types.AttributeValueMemberS{
 						Value: path,
 					}
 
-					attrs["service"] = &types.AttributeValueMemberS{
-						Value: service,
+					attrs["action"] = &types.AttributeValueMemberS{
+						Value: a,
 					}
 
 					attrs["sdk"] = &types.AttributeValueMemberS{
 						Value: ext,
 					}
 
+					attrs["service"] = &types.AttributeValueMemberS{
+						Value: s.Service,
+					}
+
 					attrs["target"] = &types.AttributeValueMemberS{
 						Value: target,
 					}
 
-					attrs["action"] = &types.AttributeValueMemberS{
-						Value: a,
+					attrs["description"] = &types.AttributeValueMemberS{
+						Value: f.Description,
 					}
 
 					dynamodbInput := &dynamodb.PutItemInput{
@@ -173,7 +174,7 @@ func addMetadataToTable(debug bool, filename string, tablename string, ext strin
 func main() {
 	root := flag.String("r", "", "The root of the Go v2 directory on this computer")
 	ext := flag.String("e", "", "The file extension of the code examples")
-	target := flag.String("t", "guide", "Guide or ???")
+	target := flag.String("t", "guide", "guide or catalog")
 	debug := flag.Bool("d", false, "Whether to barf out more info")
 
 	flag.Parse()

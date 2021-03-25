@@ -2,7 +2,18 @@
     "TableName": "CodeExamplesEntries",
     "ServiceNamesDescription": "The list of services for which we can create entities; use the list from https://docs.aws.amazon.com/cli/latest/reference/#available-services",
     "ServiceNames": [
-        "sns"
+        "cloudwatch",
+        "dynamodb",
+        "ec2",
+        "iam",
+        "kinesis",
+        "kms",
+        "rekognition",
+        "s3",
+        "sns",
+        "sqs",
+        "ssm",
+        "sts"
     ],
     "SdkNamesDescription": "The list of SDKs/languages we support, by filename extension",
     "SdkNames": [

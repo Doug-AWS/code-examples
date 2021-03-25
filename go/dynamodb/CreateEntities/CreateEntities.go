@@ -20,11 +20,12 @@ import (
 
 // Entry stores the values from the DynamoDB table
 type Entry struct {
-	Path    string `json:"path"`
-	Service string `json:"service"`
-	SDK     string `json:"sdk"`
-	Target  string `json:"target"`
-	Action  string `json:"action"`
+	Description string `json:"description"`
+	Path        string `json:"path"`
+	Service     string `json:"service"`
+	SDK         string `json:"sdk"`
+	Target      string `json:"target"`
+	Action      string `json:"action"`
 }
 
 // Config stores the values from config.json
@@ -100,8 +101,42 @@ func getServiceEntityName(debug bool, service string) (string, error) {
 	var err error
 
 	switch service {
+	case "cloudwatch":
+		retVal = "CloudWatch"
+		break
+	case "dynamodb":
+		retVal = "DynamoDB"
+		break
+	case "ec2":
+		retVal = "EC2"
+		break
+	case "iam":
+		retVal = "IAM"
+		break
+	case "kinesis":
+		retVal = "Kinesis"
+		break
+	case "kms":
+		retVal = "KMS"
+		break
+	case "rekognition":
+		retVal = "Rekognition"
+		break
+	case "s3":
+		retVal = "S3"
+		break
+	case "sqs":
+		retVal = "SQS"
+		break
 	case "sns":
 		retVal = "SNS"
+		break
+	case "ssm":
+		retVal = "SSM"
+		break
+	case "sts":
+		retVal = "STS"
+		break
 
 	default:
 		msg := "Unidentified service: " + service

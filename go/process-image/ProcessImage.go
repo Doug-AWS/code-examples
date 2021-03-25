@@ -380,8 +380,8 @@ func createThumbnail(bucketName string, fileName string) (string, error) {
 
 func main() {
 	bucketName := flag.String("b", "", "The bucket to upload the file to")
-	tableName := flag.String("t", "", "The table to store image data in")
 	fileName := flag.String("f", "", "The file to upload")
+	tableName := flag.String("t", "", "The table to store image data in")
 
 	flag.Parse()
 

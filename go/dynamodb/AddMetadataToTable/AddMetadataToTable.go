@@ -81,6 +81,70 @@ func transmogrifyPath(debug bool, service, path string) string {
 	return "https://aws.github.io/aws-sdk-go-v2/docs/code-examples/" + service + "/" + dir
 }
 
+func addDirToTable(debug bool, dirName string, tablename string, ext string, target string) error {
+	debugPrint(debug, "Adding "+dirName+" to table")
+
+	// DirName is something like:
+	//    C:/GitHub/aws-doc-sdk-examples/gov2/cloudwatch
+	parts := strings.Split(dirName, "/")
+
+	// So the service name is the last piece
+	service := parts[len(parts)-1]
+
+	path := "https://aws.github.io/aws-sdk-go-v2/docs/code-examples/" + service
+
+	// Create attributes for new table item
+	attrs := make(map[string]types.AttributeValue, 6)
+
+	fmt.Println("Converted " + dirName + " to " + path)
+
+	attrs["path"] = &types.AttributeValueMemberS{
+		Value: path,
+	}
+
+	attrs["action"] = &types.AttributeValueMemberS{
+		Value: "section",
+	}
+
+	attrs["sdk"] = &types.AttributeValueMemberS{
+		Value: ext,
+	}
+
+	attrs["service"] = &types.AttributeValueMemberS{
+		Value: service,
+	}
+
+	attrs["target"] = &types.AttributeValueMemberS{
+		Value: target,
+	}
+
+	attrs["description"] = &types.AttributeValueMemberS{
+		Value: "",
+	}
+
+	dynamodbInput := &dynamodb.PutItemInput{
+		TableName: &globalConfig.Table,
+		Item:      attrs,
+	}
+
+	// Create DynamoDB client
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		panic("configuration error, " + err.Error())
+	}
+
+	client := dynamodb.NewFromConfig(cfg)
+
+	_, err = client.PutItem(context.TODO(), dynamodbInput)
+	if err != nil {
+		fmt.Println("Got error calling PutItem: ")
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}
+
 func addMetadataToTable(debug bool, filename string, tablename string, ext string, target string) (int, error) {
 	debugPrint(debug, "Parsing "+filename)
 
@@ -191,6 +255,7 @@ func main() {
 	dir := *root
 
 	// If root ends with a '/', remove it as we always add it later
+	// so it ends up being something like /c/GitHub/aws-doc-sdk-examples/gov2
 	/*
 			   firstN := s[0:N]
 		       lastN  := s[len(s)-N:]
@@ -232,6 +297,13 @@ func main() {
 
 			for _, m := range dFiles {
 				if m.Name() == "metadata.yaml" {
+					err = addDirToTable(*debug, *root+"/"+f.Name(), globalConfig.Table, *ext, *target)
+					if err != nil {
+						fmt.Println("Got an error adding " + f.Name() + "to table:")
+						fmt.Println(err.Error())
+						return
+					}
+
 					num, err := addMetadataToTable(*debug, *root+"/"+f.Name()+"/"+m.Name(), globalConfig.Table, *ext, *target)
 					if err != nil {
 						fmt.Println("Got an error adding items to table:")

@@ -20,12 +20,12 @@ import (
 
 // Entry stores the values from the DynamoDB table
 type Entry struct {
-	Description string `json:"description"`
 	Path        string `json:"path"`
-	Service     string `json:"service"`
-	SDK         string `json:"sdk"`
-	Target      string `json:"target"`
 	Action      string `json:"action"`
+	SDK         string `json:"sdk"`
+	Service     string `json:"service"`
+	Target      string `json:"target"`
+	Description string `json:"description"`
 }
 
 // Config stores the values from config.json
@@ -170,7 +170,7 @@ func createEntity(debug bool, service string, action string, actionEntries []Ent
 		return nil
 	}
 
-	debugPrint(debug, "Got "+strconv.Itoa(len(actionEntries))+" for action "+action)
+	debugPrint(debug, "Got "+strconv.Itoa(len(actionEntries))+" entry/entries for action "+action)
 
 	// Sort entries by sdk
 	sort.Slice(actionEntries[:], func(i, j int) bool {
@@ -184,9 +184,11 @@ func createEntity(debug bool, service string, action string, actionEntries []Ent
 	}
 
 	if action == "section" {
+		debugPrint(debug, "Creating section entity for "+service)
 		entity += "<!ENTITY " + service + "-code-examples '<table class=\"table\">\n"
-		entity += "   <title>&" + serviceEntity + "; code examples in AWS SDK developer guides</title>\n"
+		entity += "   <title>&" + serviceEntity + "; code examples in AWS SDK developer guide</title>\n"
 	} else {
+		debugPrint(debug, "Creating section/action entity for "+service+"/"+action)
 		entity += "<!ENTITY " + service + "-" + action + "-code-examples '<table class=\"table\">\n"
 		entity += "   <title>&" + serviceEntity + "; " + action + " code examples in AWS SDK developer guides</title>\n"
 	}
@@ -195,14 +197,16 @@ func createEntity(debug bool, service string, action string, actionEntries []Ent
 	entity += "     <tbody>\n"
 
 	for _, a := range actionEntries {
-		sdkEntity, err := getSdkEntityName(debug, a.SDK) // golang for go
+		debugPrint(debug, "Path:        "+a.Path)
+		debugPrint(debug, "Description: "+a.Description)
+		// sdkEntity, err := getSdkEntityName(debug, a.SDK) // golang for go
 		if err != nil {
 			fmt.Println("Got an error retrieving the entity name for the " + a.SDK + " SDK")
 		}
 
 		entity += "       <row>\n"
 		entity += "         <entry>\n"
-		entity += "           <para><ulink url=\"" + a.Path + "\">&" + sdkEntity + ";</ulink></para>\n"
+		entity += "           <para><ulink url=\"" + a.Path + "\">" + a.Description + "</ulink></para>\n"
 		entity += "         </entry>\n"
 		entity += "       </row>\n"
 	}
@@ -236,7 +240,7 @@ func createServiceEntities(debug bool, table string, service string) error {
 	filt := expression.Name("service").Equal(expression.Value(service))
 
 	// Get back the title and rating (we know the year).
-	proj := expression.NamesList(expression.Name("path"), expression.Name("service"), expression.Name("sdk"), expression.Name("target"), expression.Name("action"))
+	proj := expression.NamesList(expression.Name("path"), expression.Name("action"), expression.Name("service"), expression.Name("sdk"), expression.Name("target"), expression.Name("description"))
 
 	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).Build()
 	if err != nil {
@@ -264,6 +268,15 @@ func createServiceEntities(debug bool, table string, service string) error {
 	if err != nil {
 		fmt.Println("Got an error unmarshalling table entries")
 		return err
+	}
+
+	if debug {
+		fmt.Println("path:        " + entries[0].Path)
+		fmt.Println("Action:      " + entries[0].Action)
+		fmt.Println("SDK:         " + entries[0].SDK)
+		fmt.Println("Service:     " + entries[0].Service)
+		fmt.Println("Target:      " + entries[0].Target)
+		fmt.Println("Description: " + entries[0].Description)
 	}
 
 	debugPrint(debug, "Creating output file: "+outFileName)

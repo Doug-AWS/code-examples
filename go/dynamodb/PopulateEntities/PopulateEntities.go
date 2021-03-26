@@ -25,6 +25,7 @@ type Config struct {
 	Services     []string `json:"ServiceNames"` // To validate the -s option
 	Sdks         []string `json:"SdkNames"`     // To validate the -k option
 	Targets      []string `json:"TargetNames"`  // To validate the -t option
+	Description  string   `json:"Description"`
 }
 
 var configFileName = "config.json"
@@ -137,13 +138,13 @@ func addItemsToTable(debug bool, filename string) (int, error) {
 		i++
 
 		// text should contain CSV strings like:
-		//   "https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/","section","go","sns","guide"
-		// so split it by commas, make sure there are 5 parts.
-		parts := strings.Split(text, ",")
+		//   "https://aws.github.io/aws-sdk-go-v2/docs/code-examples/sns/","section","go","sns","guide","This code ..."
+		// so split it by commas, make sure there are 6 parts.
+		parts := strings.Split(text, "|")
 
-		if len(parts) != 5 {
+		if len(parts) != 6 {
 			fmt.Println(text)
-			fmt.Println("Did not have 5 components")
+			fmt.Println("Did not have 6 components")
 			return 0, errors.New("Invalid entry")
 		}
 
@@ -154,13 +155,14 @@ func addItemsToTable(debug bool, filename string) (int, error) {
 		sdk := parts[2][1 : len(parts[2])-1]
 		service := parts[3][1 : len(parts[3])-1]
 		target := parts[4][1 : len(parts[4])-1]
+		description := parts[5][1 : len(parts[5])-1]
 
 		if !foundFirstLine {
 			if path == "path" {
 				// We have the first item
 				// so make sure the schema of the CSV file is correct
-				if action != "action" || sdk != "sdk" || service != "service" || target != "target" {
-					msg := "The CSV file does not have the correct schema: path, action, sdk, service, target"
+				if action != "action" || sdk != "sdk" || service != "service" || target != "target" || description != "description" {
+					msg := "The CSV file does not have the correct schema: path, action, sdk, service, target, description"
 					return 0, errors.New(msg)
 				}
 
@@ -172,11 +174,12 @@ func addItemsToTable(debug bool, filename string) (int, error) {
 			}
 		} else {
 			debugPrint(debug, "")
-			debugPrint(debug, "Path:    "+path)
-			debugPrint(debug, "Service: "+service)
-			debugPrint(debug, "SDK:     "+sdk)
-			debugPrint(debug, "Target:  "+target)
-			debugPrint(debug, "Action:  "+action)
+			debugPrint(debug, "Description: "+description)
+			debugPrint(debug, "Path:        "+path)
+			debugPrint(debug, "Service:     "+service)
+			debugPrint(debug, "SDK:         "+sdk)
+			debugPrint(debug, "Target:      "+target)
+			debugPrint(debug, "Action:      "+action)
 			debugPrint(debug, "")
 
 			isValid := isValidItem(service, globalConfig.Services)
@@ -210,26 +213,30 @@ func addItemsToTable(debug bool, filename string) (int, error) {
 				return 0, errors.New(msg)
 			}
 
-			attrs := make(map[string]types.AttributeValue, 5)
+			attrs := make(map[string]types.AttributeValue, 6)
 
 			attrs["path"] = &types.AttributeValueMemberS{
 				Value: path,
 			}
 
-			attrs["service"] = &types.AttributeValueMemberS{
-				Value: service,
+			attrs["action"] = &types.AttributeValueMemberS{
+				Value: action,
 			}
 
 			attrs["sdk"] = &types.AttributeValueMemberS{
 				Value: sdk,
 			}
 
+			attrs["service"] = &types.AttributeValueMemberS{
+				Value: service,
+			}
+
 			attrs["target"] = &types.AttributeValueMemberS{
 				Value: target,
 			}
 
-			attrs["action"] = &types.AttributeValueMemberS{
-				Value: action,
+			attrs["description"] = &types.AttributeValueMemberS{
+				Value: description,
 			}
 
 			dynamodbInput := &dynamodb.PutItemInput{

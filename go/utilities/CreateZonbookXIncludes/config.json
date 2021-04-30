@@ -1,0 +1,26 @@
+{
+  "UserNameComment": "UserName defines who is using GitHub API",
+  "UserName": "",
+  "Branch": "doug-test-go-metadata",
+  "LanguagesDirsComment": "LanguagesDirs is the list of programming languages directories from which we create code example XML files to XINCLUDE.",
+  "LanguageDirs": [
+    "dotnetv3",
+    "gov2"
+  ],
+  "ServicesComment": "Services is the list of services for which we create code example XML files to XINCLUDE.",
+  "Services": [
+    "acm",
+    "cloudwatch",
+    "ec2",
+    "iam",
+    "kinesis",
+    "kms",
+    "polly",
+    "rekognition",
+    "s3",
+    "sns",
+    "sqs",
+    "ssm",
+    "sts"
+  ]
+}

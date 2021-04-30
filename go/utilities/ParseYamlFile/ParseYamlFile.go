@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"flag"
 	"fmt"
-	"io/ioutil"
+	"net/http"
 
 	"gopkg.in/yaml.v2"
 )
@@ -13,43 +15,71 @@ type Metadata struct {
 		Path        string `yaml:"path"`
 		Description string `yaml:"description"`
 		Services    []struct {
-			Service    string   `yaml:"service"`
-			Operations []string `yaml:"operations"`
+			Service string   `yaml:"service"`
+			Actions []string `yaml:"actions"`
 		} `yaml:"services"`
 	} `yaml:"files"`
 }
 
+func debugPrint(debug bool, s string) {
+	if debug {
+		fmt.Println(s)
+	}
+}
+
 func main() {
-	filename := "metadata.yaml"
+	debugPtr := flag.Bool("d", false, "Show extra info")
+	flag.Parse()
+	debug := *debugPtr
 
-	fmt.Println("Parsing " + filename)
+	path := "https://raw.githubusercontent.com/awsdocs/aws-doc-sdk-examples/doug-test-go-metadata/dotnetv3/ACM/metadata.yaml"
 
-	yamlFile, err := ioutil.ReadFile(filename)
+	fmt.Println("Parsing " + path)
+
+	var metadata Metadata
+
+	results, err := http.Get(path)
 	if err != nil {
-		fmt.Printf("Error reading YAML file: %s\n", err)
+		fmt.Println("Got an error getting the file:")
+		fmt.Println(err)
+		return
+	}
+	defer results.Body.Close()
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(results.Body)
+	bytes := buf.Bytes()
+
+	err = yaml.Unmarshal(bytes, &metadata)
+	if err != nil {
+		fmt.Println("Got an error unmarshalling:")
+		fmt.Println(err)
 		return
 	}
 
-	var metadata Metadata
-	err = yaml.Unmarshal(yamlFile, &metadata)
-	if err != nil {
-		fmt.Printf("Error parsing YAML file: %s\n", err)
+	debugPrint(debug, "Unmarshalled data for "+path)
+	if debug {
+		fmt.Println("Data:")
+		fmt.Println(metadata)
 	}
 
-	fmt.Println("Found", len(metadata.Files), "files:")
-
+	// Iterate through files.
+	// Create a link and tab for services/operations
 	for _, data := range metadata.Files {
-		fmt.Println("Path:        " + data.Path)
-		fmt.Println("Description: " + data.Description)
-		fmt.Println("Services")
+		debugPrint(debug, "")
+		debugPrint(debug, "Path:        "+data.Path)
+		debugPrint(debug, "Description: "+data.Description)
+		debugPrint(debug, "Services")
 
 		for _, s := range data.Services {
-			fmt.Println("  " + s.Service)
-			fmt.Println("    Operations:")
+			debugPrint(debug, "  "+s.Service)
+			debugPrint(debug, "    Actions:")
 
-			for _, o := range s.Operations {
-				fmt.Println("      " + o)
+			for _, a := range s.Actions {
+				debugPrint(debug, "      "+a)
+
 			}
 		}
 	}
+
 }

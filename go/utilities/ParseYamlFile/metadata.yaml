@@ -1,23 +1,26 @@
 files:
-  - path: DIRECTORY1/FILE1.ext
-    description: This example
+  - description: This code example displays your certificates in the region specified in the code.
+  - path: DescribeCertificates/DescribeCertificate/DescribeCertificate.cs
     services:
-      - service: SERVICE1
-        operations:
-          - s1op1
-          - s1op2
-      - service: SERVICE2
-        operations:
-          - s2op1
-          - s2op2
-  - path: DIRECTORY2/FILE2.ext
-    description: This example
+      - service: acm
+        actions:
+          - DescribeCertificate
+  - description: test
+  - path: DescribeCertificates/DescribeCertificateTest/DescribeCertificateTest.cs
     services:
-      - service: SERVICE1
-        operations:
-          - s1op1
-          - s1op2
-      - service: SERVICE2
-        operations:
-          - s2op1
-          - s2op2
+      - service: acm
+        actions:
+          - test
+  - description: This code example displays your certificates in the region specified in the code.
+  - path: ListCertificates/ListCertificates/ListCertificates.cs
+    services:
+      - service: acm
+        actions:
+          - ListCertificates
+  - description: test
+  - path: ListCertificates/ListCertificatesTest/ListCertificatesTest.cs
+    services:
+      - service: acm
+        actions:
+          - test
+  

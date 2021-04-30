@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -178,15 +179,16 @@ func createEntity(debug bool, service string, action string, actionEntries []Ent
 	})
 
 	entity := ""
-	serviceEntity, err := getServiceEntityName(debug, service) // SNS for SNS
+	serviceEntity, err := getServiceEntityName(debug, service)
 	if err != nil {
-		fmt.Println("Got an error retrieving the entity name for the " + service + " service")
+		msg := "Got an error retrieving the entity name for the " + service + " service"
+		return errors.New(msg)
 	}
 
 	if action == "section" {
 		debugPrint(debug, "Creating section entity for "+service)
 		entity += "<!ENTITY " + service + "-code-examples '<table class=\"table\">\n"
-		entity += "   <title>&" + serviceEntity + "; code examples in AWS SDK developer guide</title>\n"
+		entity += "   <title>&" + serviceEntity + "; code examples in AWS SDK developer guides</title>\n"
 	} else {
 		debugPrint(debug, "Creating section/action entity for "+service+"/"+action)
 		entity += "<!ENTITY " + service + "-" + action + "-code-examples '<table class=\"table\">\n"
@@ -199,14 +201,17 @@ func createEntity(debug bool, service string, action string, actionEntries []Ent
 	for _, a := range actionEntries {
 		debugPrint(debug, "Path:        "+a.Path)
 		debugPrint(debug, "Description: "+a.Description)
-		// sdkEntity, err := getSdkEntityName(debug, a.SDK) // golang for go
+
 		if err != nil {
 			fmt.Println("Got an error retrieving the entity name for the " + a.SDK + " SDK")
 		}
 
+		// Escape characters in description
+		description := html.EscapeString(a.Description)
+
 		entity += "       <row>\n"
 		entity += "         <entry>\n"
-		entity += "           <para><ulink url=\"" + a.Path + "\">" + a.Description + "</ulink></para>\n"
+		entity += "           <para><ulink url=\"" + a.Path + "\">" + description + "</ulink></para>\n"
 		entity += "         </entry>\n"
 		entity += "       </row>\n"
 	}

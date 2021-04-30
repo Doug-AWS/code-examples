@@ -81,6 +81,57 @@ func transmogrifyPath(debug bool, service, path string) string {
 	return "https://aws.github.io/aws-sdk-go-v2/docs/code-examples/" + service + "/" + dir
 }
 
+func getServiceEntityName(debug bool, service string) (string, error) {
+	retVal := ""
+	var err error
+
+	switch service {
+	case "cloudwatch":
+		retVal = "CloudWatch"
+		break
+	case "dynamodb":
+		retVal = "DynamoDB"
+		break
+	case "ec2":
+		retVal = "EC2"
+		break
+	case "iam":
+		retVal = "IAM"
+		break
+	case "kinesis":
+		retVal = "Kinesis"
+		break
+	case "kms":
+		retVal = "KMS"
+		break
+	case "rekognition":
+		retVal = "Rekognition"
+		break
+	case "s3":
+		retVal = "S3"
+		break
+	case "sqs":
+		retVal = "SQS"
+		break
+	case "sns":
+		retVal = "SNS"
+		break
+	case "ssm":
+		retVal = "SSM"
+		break
+	case "sts":
+		retVal = "STS"
+		break
+
+	default:
+		msg := "Unidentified service: " + service
+		err = errors.New(msg)
+
+	}
+
+	return retVal, err
+}
+
 func addDirToTable(debug bool, dirName string, tablename string, ext string, target string) error {
 	debugPrint(debug, "Adding "+dirName+" to table")
 
@@ -96,7 +147,7 @@ func addDirToTable(debug bool, dirName string, tablename string, ext string, tar
 	// Create attributes for new table item
 	attrs := make(map[string]types.AttributeValue, 6)
 
-	fmt.Println("Converted " + dirName + " to " + path)
+	debugPrint(debug, "Converted "+dirName+" to "+path)
 
 	attrs["path"] = &types.AttributeValueMemberS{
 		Value: path,
@@ -118,8 +169,14 @@ func addDirToTable(debug bool, dirName string, tablename string, ext string, tar
 		Value: target,
 	}
 
+	name, err := getServiceEntityName(debug, service)
+	if err != nil {
+		fmt.Print("Got an unknown service name: " + service)
+		return err
+	}
+
 	attrs["description"] = &types.AttributeValueMemberS{
-		Value: "",
+		Value: "This topic describes how to perform some of the basic functions of " + name + " using version 2 of the AWS SDK for Go.",
 	}
 
 	dynamodbInput := &dynamodb.PutItemInput{

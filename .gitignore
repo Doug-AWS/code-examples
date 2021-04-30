@@ -38,3 +38,4 @@ node_modules/
 cdk.out/
 package-lock.json
 go.sum
+build/

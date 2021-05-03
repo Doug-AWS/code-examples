@@ -73,24 +73,29 @@ func createOutdir(debug bool, outDir string) error {
 
 // Create a Zonbook XML file containing link to a code example that can be XINCLUDEd in a tab.
 // The format of the filename is SERVICE-OPERATION-LANGUAGE-link.xml
-func createLinkFile(debug bool, service, operation, language, sourceFileName, sourceFileURL, outDir string) error {
+func createLinkFile(debug bool, service, operation, language, sourceFileName, sourceFileURL, outDir string) (string, error) {
 	outFileName := service + "-" + operation + "-" + language + "-link.xml"
 
 	debugPrint(debug, "Creating link file "+outFileName)
 
 	file, err := os.Create(outDir + "/" + outFileName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	_, err = file.WriteString("<ulink url=\"" + sourceFileURL + "\">" + sourceFileName + "</ulink>")
+	outString := "<ulink url=\"" + sourceFileURL + sourceFileName + "\">" + operation + "</ulink>"
+
+	debugPrint(debug, "Creating link:")
+	debugPrint(debug, outString)
+
+	_, err = file.WriteString(outString)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	file.Close()
 
-	return nil
+	return outString, nil
 }
 
 func mapLanguage(debug bool, language string) string {
@@ -112,13 +117,14 @@ func mapLanguage(debug bool, language string) string {
        <tabname>LANGUAGE</tabname>
            <tabcontent>
                <para>See the
-                   <ulink url="LINK TO CODE EXAMPLE">SOURCE FILE NAME</ulink> code example in the GitHub repository.
+                   <ulink url="LINK TO CODE EXAMPLE">OPERATION</ulink> code example in the GitHub repository.
                 </para>
             </tabcontent>
 		</tablistentry>
 */
-func createTabFile(debug bool, service, operation, language, sourceFileName, sourceFileURL, outDir string) error {
-	linkFileName := service + "-" + operation + "-" + language + "-link.xml"
+// WAS: func createTabFile(debug bool, service, operation, language, sourceFileName, sourceFileURL, outDir string) error {
+func createTabFile(debug bool, service, operation, language, link, outDir string) error {
+	// linkFileName := service + "-" + operation + "-" + language + "-link.xml"
 	outFileName := service + "-" + operation + "-" + language + "-tab.xml"
 
 	debugPrint(debug, "Creating link file "+outFileName)
@@ -142,19 +148,19 @@ func createTabFile(debug bool, service, operation, language, sourceFileName, sou
 	if err != nil {
 		return err
 	}
-	_, err = file.WriteString("<para>See the")
+	_, err = file.WriteString("<para>See the ")
 	if err != nil {
 		return err
 	}
-	_, err = file.WriteString("<xi:include href=\"" + linkFileName + "\"/>")
+	_, err = file.WriteString(link)
 	if err != nil {
 		return err
 	}
-	_, err = file.WriteString("</para>")
+	_, err = file.WriteString(" code example.</para>")
 	if err != nil {
 		return err
 	}
-	_, err = file.WriteString("<tabcontent>")
+	_, err = file.WriteString("</tabcontent>")
 	if err != nil {
 		return err
 	}
@@ -191,13 +197,15 @@ type Metadata struct {
 }
 
 func processMetadata(debug bool, path, outDir string) error {
+	debugPrint(debug, "")
+	debugPrint(debug, "Processing file: "+path)
 	// The path should look something like:
 	//    https://raw.githubusercontent.com/awsdocs/aws-doc-sdk-examples/doug-test-go-metadata/dotnetv3/ACM/metadata.yaml
 
 	// So if we split by '/',
 	parts := strings.Split(path, "/")
 	length := len(parts)
-	filename := parts[length-1]
+	// filename := parts[length-1]
 	// service := parts[length-2]
 	language := parts[length-3]
 
@@ -238,11 +246,18 @@ func processMetadata(debug bool, path, outDir string) error {
 					continue
 				}
 
-				err := createLinkFile(debug, s.Service, a, language, filename, path, outDir)
+				// Since path contains metadata.yaml as the last element,
+				// chop /metadata.yaml off.
+				p := strings.TrimRight(path, "metadata.yaml")
+				p = strings.TrimRight(p, ".") // In case it was .metadata.yaml
+
+				link, err := createLinkFile(debug, s.Service, a, language, data.Path, p, outDir)
 				if err != nil {
 					return err
 				}
-				err = createTabFile(debug, s.Service, a, language, filename, path, outDir)
+				// WAS: err = createTabFile(debug, s.Service, a, language, data.Path, p, outDir)
+				err = createTabFile(debug, s.Service, a, language, link, outDir)
+
 				if err != nil {
 					return err
 				}
@@ -312,7 +327,7 @@ func usage() {
 	fmt.Println("Usage:")
 	fmt.Println("    go run CreateZonbookIncludes.go -u NAME [-d] [-h]")
 	fmt.Println(" where:")
-	fmt.Println("    NAME      is the name of the GitHub user used to the GitHub API")
+	fmt.Println("    NAME      is the name of the GitHub user used for basic authentication for the GitHub API")
 	fmt.Println("              the default is the value of UserName in config.json")
 	fmt.Println("    -d        displays additional debugging information")
 	fmt.Println("    -h        displays this error message and quits")
@@ -356,7 +371,7 @@ func main() {
 		return
 	}
 
-	userName := flag.String("u", globalConfig.UserName, "Your GitHub user name")
+	userName := flag.String("u", globalConfig.UserName, "Your GitHub user name, for basic authentication")
 	debug := flag.Bool("d", false, "Whether to barf out more info. False by default.")
 	help := flag.Bool("h", false, "Displays usage and quits")
 	flag.Parse()

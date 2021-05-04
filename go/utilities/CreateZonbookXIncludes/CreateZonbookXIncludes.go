@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -37,7 +38,7 @@ func debugPrint(debug bool, s string) {
 }
 
 // If output directory does not exist, create it.
-func createOutdir(debug bool, outDir string) error {
+func createOutdir(outDir string) error {
 	src, err := os.Stat(outDir)
 
 	if os.IsNotExist(err) {
@@ -56,27 +57,12 @@ func createOutdir(debug bool, outDir string) error {
 	return nil
 }
 
-/* Eventually we'll create a complete tablist for all applicable code examples like:
-
-    <tablist>
-        <tablistentry>
-            <tabname>LANGUAGE</tabname>
-            <tabcontent>
-			    <para>See the
-                    <ulink url="LINK TO CODE EXAMPLE">SOURCE FILE NAME</ulink> code example in the GitHub repository.
-                </para>
-            </tabcontent>
-		</tablistentry>
-		...
-	</tablist>
-*/
-
 // Create a Zonbook XML file containing link to a code example that can be XINCLUDEd in a tab.
 // The format of the filename is SERVICE-OPERATION-LANGUAGE-link.xml
 func createLinkFile(debug bool, service, operation, language, sourceFileName, sourceFileURL, outDir string) (string, error) {
 	outFileName := service + "-" + operation + "-" + language + "-link.xml"
 
-	debugPrint(debug, "Creating link file "+outFileName)
+	// debugPrint(debug, "Creating link file "+outFileName)
 
 	file, err := os.Create(outDir + "/" + outFileName)
 	if err != nil {
@@ -85,8 +71,8 @@ func createLinkFile(debug bool, service, operation, language, sourceFileName, so
 
 	outString := "<ulink url=\"" + sourceFileURL + sourceFileName + "\">" + operation + "</ulink>"
 
-	debugPrint(debug, "Creating link:")
-	debugPrint(debug, outString)
+	// debugPrint(debug, "Creating link:")
+	// debugPrint(debug, outString)
 
 	_, err = file.WriteString(outString)
 	if err != nil {
@@ -111,23 +97,163 @@ func mapLanguage(debug bool, language string) string {
 	return lang
 }
 
-// Create a Zonbook XML file that can be include as a tab in a table.
-// The format of the filename is SERVICE-OPERATION-LANGUAGE-tab.xml
-/* <tablistentry>
-       <tabname>LANGUAGE</tabname>
-           <tabcontent>
-               <para>See the
-                   <ulink url="LINK TO CODE EXAMPLE">OPERATION</ulink> code example in the GitHub repository.
-                </para>
-            </tabcontent>
-		</tablistentry>
+// Creates a Zonbook tablist where each tab entry is the combination of service, operation, and language.
+// Every entry in files should be the same service and operation,
+// So we use the values of the first.
+// Note that there might be more than one tablistentry for a specific language.
+/*
+    <tablist>
+      <tablistentry>
+        <tabname>LANGUAGE</tabname>
+        <tabcontent>
+          <para>
+            For more information, see
+            <ulink url="LINK">DESCRIPTION</ulink>
+          </para>
+        </tabcontent>
+        </tablistentry>
+	</tablist>
 */
-// WAS: func createTabFile(debug bool, service, operation, language, sourceFileName, sourceFileURL, outDir string) error {
+func createOperationTabList(debug bool, files []XFile, outDir string) error {
+	outFileName := files[0].service + "-" + files[0].operation + "-tablist.xml"
+
+	debugPrint(debug, "Creating tablist file "+outFileName)
+
+	file, err := os.Create(outDir + "/" + outFileName)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("<tablist>\n")
+	if err != nil {
+		return err
+	}
+
+	language := files[0].language
+	lang := mapLanguage(debug, language)
+
+	_, err = file.WriteString("  <tablistentry>\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("    <tabname>" + lang + "</tabname>\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("    <tabcontent>\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("      <para>\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("        See the \n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("        " + files[0].link + "\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("        code example.\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("      </para>\n")
+	if err != nil {
+		return err
+	}
+
+	for _, f := range files {
+		if language != f.language {
+			language = f.language
+			lang = mapLanguage(debug, language)
+
+			// Close initial tablistentry tag
+			_, err = file.WriteString("    </tabcontent>\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("  </tablistentry>\n")
+			if err != nil {
+				return err
+			}
+
+			// Start new one
+			_, err = file.WriteString("  <tablistentry>\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("    <tabname>" + lang + "</tabname>\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("    <tabcontent>\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("      <para>\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("        See the \n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("        " + f.link + "\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("        code example.\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString("      </para>\n")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Close final tablistentry tag and taglist tag
+	_, err = file.WriteString("    </tabcontent>\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("  </tablistentry>\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("</tablist>\n")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func createTabFile(debug bool, service, operation, language, link, outDir string) error {
-	// linkFileName := service + "-" + operation + "-" + language + "-link.xml"
 	outFileName := service + "-" + operation + "-" + language + "-tab.xml"
 
-	debugPrint(debug, "Creating link file "+outFileName)
+	// debugPrint(debug, "Creating tab file "+outFileName)
 
 	file, err := os.Create(outDir + "/" + outFileName)
 	if err != nil {
@@ -184,6 +310,15 @@ func isValidLanguage(debug bool, lang string) bool {
 	return false
 }
 
+type XFile struct {
+	service   string
+	operation string
+	language  string
+	link      string
+}
+
+var XFiles []XFile
+
 // Metadata defines the elements in metatdata.yaml
 type Metadata struct {
 	Files []struct {
@@ -197,8 +332,8 @@ type Metadata struct {
 }
 
 func processMetadata(debug bool, path, outDir string) error {
-	debugPrint(debug, "")
-	debugPrint(debug, "Processing file: "+path)
+	// debugPrint(debug, "")
+	// debugPrint(debug, "Processing file: "+path)
 	// The path should look something like:
 	//    https://raw.githubusercontent.com/awsdocs/aws-doc-sdk-examples/doug-test-go-metadata/dotnetv3/ACM/metadata.yaml
 
@@ -220,7 +355,12 @@ func processMetadata(debug bool, path, outDir string) error {
 	defer results.Body.Close()
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(results.Body)
+	_, err = buf.ReadFrom(results.Body)
+	if err != nil {
+		fmt.Println("Got an error getting bytes from result")
+		return err
+	}
+
 	bytes := buf.Bytes()
 
 	err = yaml.Unmarshal(bytes, &metadata)
@@ -235,7 +375,7 @@ func processMetadata(debug bool, path, outDir string) error {
 	for _, data := range metadata.Files {
 		// If Description is "test", skip it
 		if data.Description == "test" {
-			debugPrint(debug, "Skipping test file "+data.Path)
+			// debugPrint(debug, "Skipping test file "+data.Path)
 			continue
 		}
 
@@ -255,7 +395,11 @@ func processMetadata(debug bool, path, outDir string) error {
 				if err != nil {
 					return err
 				}
-				// WAS: err = createTabFile(debug, s.Service, a, language, data.Path, p, outDir)
+
+				// Add entry to list of files
+				xf := XFile{service: s.Service, operation: a, language: language, link: link}
+				XFiles = append(XFiles, xf)
+
 				err = createTabFile(debug, s.Service, a, language, link, outDir)
 
 				if err != nil {
@@ -311,8 +455,8 @@ func processFiles(debug bool, input string, outDir string) error {
 			continue
 		}
 
-		debugPrint(debug, "Calling processMetadata with path:")
-		debugPrint(debug, "  "+filePrefix+leaf.Path)
+		// debugPrint(debug, "Calling processMetadata with path:")
+		// debugPrint(debug, "  "+filePrefix+leaf.Path)
 
 		err := processMetadata(debug, filePrefix+leaf.Path, outDir)
 		if err != nil {
@@ -390,7 +534,7 @@ func main() {
 		globalConfig.Branch = "master"
 	}
 
-	err = createOutdir(*debug, outdir)
+	err = createOutdir(outdir)
 	if err != nil {
 		fmt.Println("Could not create output directory " + outdir)
 		return
@@ -403,8 +547,8 @@ func main() {
 	gitHubURL := "https://api.github.com"
 	query := gitHubURL + "/repos/awsdocs/aws-doc-sdk-examples/git/trees/" + globalConfig.Branch + "?recursive=1"
 
-	debugPrint(*debug, "Querying: ")
-	debugPrint(*debug, query)
+	// debugPrint(*debug, "Querying: ")
+	// debugPrint(*debug, query)
 
 	jsonData := ""
 	jsonValue, _ := json.Marshal(jsonData)
@@ -443,5 +587,70 @@ func main() {
 	if err != nil {
 		fmt.Println("Got an error processing files:")
 		fmt.Println(err)
+	}
+
+	sort.Slice(XFiles, func(i, j int) bool {
+		if XFiles[i].service < XFiles[j].service {
+			return true
+		} else if XFiles[i].service > XFiles[j].service {
+			return false
+		} else {
+			if XFiles[i].operation < XFiles[j].operation {
+				return true
+			} else {
+				if XFiles[i].operation > XFiles[j].operation {
+					return false
+				}
+			}
+		}
+		return XFiles[i].language < XFiles[j].language
+	})
+
+	fmt.Println("Found ", len(XFiles), "operations")
+
+	service := ""
+	operation := ""
+
+	var OFiles []XFile
+
+	for _, f := range XFiles {
+		if f.service != service {
+			// If OFiles isn't empty, create a tablist from the entries
+			if OFiles != nil {
+				err := createOperationTabList(*debug, OFiles, outdir)
+				if err != nil {
+					fmt.Println("Got an error creating tablist")
+					fmt.Println(err.Error())
+					return
+				}
+
+				// Reset OFiles
+				OFiles = nil
+			}
+		}
+
+		// We have the same service, but do we have the same operation?
+
+		service = f.service
+		if f.operation != operation {
+			// If OFiles isn't empty, create a tablist from the entries
+			if OFiles != nil {
+				err := createOperationTabList(*debug, OFiles, outdir)
+				if err != nil {
+					fmt.Println("Got an error creating tablist")
+					fmt.Println(err.Error())
+					return
+				}
+
+				// Reset OFiles
+				OFiles = nil
+			}
+
+			operation = f.operation
+		}
+
+		// We have the same service and operation, so append them to the list
+		ofile := XFile{service: f.service, operation: f.operation, language: f.language, link: f.link}
+		OFiles = append(OFiles, ofile)
 	}
 }

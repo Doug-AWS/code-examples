@@ -7,6 +7,14 @@
     "dotnetv3",
     "gov2"
   ],
+  "LocalRootComment": "Where we can find the local clone of the repo, when mode == local",
+  "LocalRoot": "C:\\GitHub\\aws-doc-sdk-examples",
+  "MapFileComment": "The file containing the mappings from service-action to its description",
+  "MapFile": "ServiceMap.txt",
+  "ModeComment": "Use mode, local or remote, to run locally, to prevent a REST API rate limit from GitHub",
+  "Mode": "local",
+  "OutdirComment": "The local/relative directory where output is saved",
+  "Outdir": "build",
   "ServicesComment": "Services is the list of services for which we create code example XML files to XINCLUDE.",
   "Services": [
     "acm",

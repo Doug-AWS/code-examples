@@ -1,0 +1,30 @@
+# This file maps a service name [and API] to a description.
+# ALWAYS use the short-name entity for the service name.
+# See https://code.amazon.com/packages/AWSSharedContent/blobs/mainline/--/src/common/phrases-shared-services.ent
+# Use the description from the service's API reference.
+# For SNS: https://docs.aws.amazon.com/sns/latest/api/API_Operations.html
+#
+cpp-sdk: &CPP;
+go-sdk: &Golong;
+java-sdk: &Javalong;
+js-sdk: &JSBlong;
+cs-sdk: &NETlong;
+php-sdk: &PHPlong;
+py-sdk: &Pythonlong;
+rb-sdk: &Rubylong;
+#
+sns-entity: &SNS;
+sns-description: &SNS; is a web service that enables applications, end-users, and devices to instantly send and receive notifications from the cloud.
+sns-CheckIfPhoneNumberIsOptedOut: Accepts a phone number and indicates whether the phone holder has opted out of receiving SMS messages from your account.
+sns-CheckIfPhoneNumberIsOptedOut-title: Check whether a phone number is opted out
+sns-CreateTopic: Creates a topic to which notifications can be published.
+sns-CreateTopic-title: Creates a topic
+sns-ListSubscriptions: Returns a list of the requester's subscriptions.
+sns-ListSubscriptions-title: List subscriptions
+sns-ListTopics: Returns a list of the requester's topics.
+sns-ListTopics-title: List topics
+sns-Publish: Sends a message to an &SNS; topic, a text message to a phone number, or a message to a mobile platform endpoint.
+sns-Publish-title: Publish to a topic
+sns-Subscribe: Subscribes an endpoint to an &SNS; topic.
+sns-Subscribe-title: Subscribe to a topic
+# 

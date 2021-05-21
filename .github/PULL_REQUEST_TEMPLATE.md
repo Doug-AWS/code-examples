@@ -1,10 +1,10 @@
----
-name: "New pull request"
-about: Select one of the following templates for your pull request
----
+# New pull request
 
-https://github.com/Doug-AWS/code-examples?template=new-example-template.md
+Select one of the following templates for your pull request:
 
-https://github.com/Doug-AWS/code-examples?template=resolve-issue-template.md
 
-https://github.com/Doug-AWS/code-examples?template=update-example-template.md
+[New code example](https://github.com/Doug-AWS/code-examples?template=new-example-template.md)
+
+[Resolve issue](https://github.com/Doug-AWS/code-examples?template=resolve-issue-template.md)
+
+[Update code example](https://github.com/Doug-AWS/code-examples?template=update-example-template.md)

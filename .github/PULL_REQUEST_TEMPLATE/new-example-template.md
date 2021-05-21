@@ -1,4 +1,14 @@
-# New SDK code example
+---
+name: "New SDK code example"
+about: Pull request submitting a new code example
+title: "(LANGUAGE): short description (don't forget to add the language label)"
+labels: on review
+---
+<!--
+describe the PR:
+-->
+
+
 
 The submitter has:
 

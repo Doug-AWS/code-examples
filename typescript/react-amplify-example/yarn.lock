@@ -3943,7 +3943,7 @@ autoprefixer@^9.6.1:
     colorette "^1.2.1"
     normalize-range "^0.1.2"
     num2fraction "^1.2.2"
-    postcss "^7.0.32"
+    postcss "^8.2.10"
     postcss-value-parser "^4.1.0"
 
 aws-amplify@^3.3.25:
